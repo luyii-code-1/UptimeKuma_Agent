@@ -1,0 +1,34 @@
+{
+    "meta":{
+        "version": "202512270018v1",
+        "node_name": "MacBook Air M1",
+        "enableed": true,
+        "cache_path": "./temp.json"
+        },
+    "region":{
+        "hostname": "MacBook Air M1",
+        "node_name": "宁波-CRSO-NNN:00(Macbook Air)",
+        "server": "https://ickpvctx.cn-nb1.rainapp.top/api/push/",
+        "token": ""
+        },
+    "monitors":{
+        "1":{
+            "name": "shell test(ping)",
+            "type": "bash",
+            "command": "ping 8.8.8.8 -t 4",
+            "keyword": ["4 packets received"],
+            "warnword": [],
+            "readline": -1,
+            "ping": false,
+            "datalevel": 0
+        },
+        "2":{
+            "name": "http test",
+            "type": "http",
+            "url": "https://www.baidu.com",
+            "keyword": ["百度","关于"],
+            "warnword": [],
+            "datalevel": 0
+        }
+    }
+}

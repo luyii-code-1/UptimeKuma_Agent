@@ -5,7 +5,14 @@ import subprocess
 import time
 from concurrent.futures import ThreadPoolExecutor
 
-def _init_loadconf():
+def start_threads(everymonitor):
+    print(everymonitor)
+    main_check_services()
+
+def main_check_services():
+    return True
+
+def init_loadconf():
     #Load Raw Config
     raw_conf = json.load(open("conf.json", "r", encoding="utf-8"))
     
@@ -16,18 +23,16 @@ def _init_loadconf():
     
     #Process Meta
     version = raw_meta["enable"]
-    run_mode = raw_meta["install"]
+    node_name = raw_meta["node_name"]
     cache_path = raw_meta["cache"]
-    monitor_num = raw_meta["monitor_num"]
+    enabled = raw_meta["enabled"]
 
     #Process Region
-    node_name = raw_region["name"]
+    hosts_name = raw_region["hostname"]
+    node_name = raw_region["node_name"]
     server = raw_region["server"]
-    security_mode = raw_region["security"]
-    server_token = raw_region["token"]
+    token = raw_region["token"]
 
     #Process Monitors
-    for i in range(monitor_num):
-        return
-
-
+    for everymonitor in raw_monitors():
+        start_threads(everymonitor)
