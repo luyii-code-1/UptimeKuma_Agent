@@ -6,6 +6,11 @@ import time
 import threading
 import argparse
 
+# UptimeKuma Agent v0.0(Work in Progress)
+# This is a program that can use UptimeKuma to monitor shell or systemed etc. target
+# Developer:Luyii 
+# mail:root@luyii.cn
+
 # Lasts update: 2025-12-28 00:28 on Macbook Air M1(202512280028v1)
 ### To do List:
 # 1.Complete the http check function
