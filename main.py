@@ -272,4 +272,6 @@ debug = args.debug
 if debug:
     print(f"{COLOR_DEBUG}[DEBUG] Debug mode enabled{COLOR_RESET}")
 
-init_loadconf()
+
+if __name__ == "__main__":
+    init_loadconf()
