@@ -11,6 +11,9 @@ import argparse
 # Developer:Luyii 
 # mail:root@luyii.cn
 
+# Warning! This code is developed in MacOS environment, may not fully compatible with Windows or Linux system.
+# For example ,ping usage as "ping 8.8.8.8 -t 4" but "ping 8.8.8.8" in Windows.
+
 # Lasts update: 2025-12-28 00:28 on Macbook Air M1(202512280028v1)
 ### To do List:
 # 1.Complete the http check function
@@ -76,11 +79,49 @@ def main_check_services(conf_monitor):
     type = conf_monitor["type"]  # Support 2 types now: bash, http
     if type == "bash":
         is_up = bash_check(conf_monitor)
+    elif type == "http":
+        is_up = http_check(conf_monitor)
     else:
         debug_print("WIP: Unsupported monitor type: " + type)
 ###################Last Work Here####################
 
+def http_check(conf_monitor):
+    if debug:
+        debug_print("===== Now Running http_check() =====")
+    
+    name = conf_monitor["name"]
+    url = conf_monitor["url"]
+    statuscode = conf_monitor["statuscode"]
+    keyword = conf_monitor["keyword"]
+    warnword = conf_monitor["warnword"]
+    datalevel = conf_monitor["datalevel"]
 
+    if debug:
+        debug_print("HTTP Check - Name: " + name)
+        debug_print("HTTP Check - URL: " + url)
+        debug_print("HTTP Check - Statuscode: " + str(statuscode))
+        debug_print("HTTP Check - Keyword: " + str(keyword))
+        debug_print("HTTP Check - Warnword: " + str(warnword))  # [Work in Process](DISABLED)
+        debug_print("HTTP Check - Datalevel: " + str(datalevel))
+
+    try:
+        response = requests.get(url, timeout=30)
+        tmp_is_return = True
+        tmp_return = response.text
+        tmp_status_code = response.status_code
+        if debug:
+            debug_print("HTTP Check - Response Status Code: " + str(tmp_status_code))
+            debug_print("HTTP Check - Response Body: " + str(tmp_return))
+
+    except requests.RequestException as e:
+        tmp_is_return = False
+        tmp_return = ""
+        tmp_status_code = None
+        error_print("HTTP request error: " + str(e))# There is an Bug that havn't fix yet：[ERROR] HTTP request error: HTTPSConnectionPool(host='www.baidu.com', port=443): Max retries exceeded with url: / (Caused by ProxyError('Unable to connect to proxy', FileNotFoundError(2, 'No such file or directory')))
+    
+    tmp_process_output_list = tmp_return.split("\n")    #Use \n to split lines,May Change later(Very long time!)
+    debug_print("HTTP Check - Raw Output: " + str(tmp_process_output_list))
+#########Last Work Here#########
 
 def bash_check(conf_monitor):
 
@@ -198,6 +239,18 @@ def init_loadconf():
     node_name = raw_meta["node_name"]
     cache_path = raw_meta["cache_path"]
     enabled = raw_meta["enabled"]
+    
+    try:
+        platform = raw_meta.get("platform", "Unknown")
+    except Exception as e:
+        platform = "Unknown"
+        debug_print("Error when getting platform field: " + str(e))
+    
+    if platform == "Unknown":
+        warn_print("Platform not specified in config, defaulting to 'Unknown', this Program can't run as an Unknow Platform!")
+        warn_print("Please configure the 'platform' field in conf.json to 'Windows', 'Linux' or 'MacOS' accordingly.")
+        warn_print("This Program don't check the command but just warn you.")
+        os.stop()
 
     # Process Region
     hosts_name = raw_region["hostname"]
