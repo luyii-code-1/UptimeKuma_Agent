@@ -3,7 +3,8 @@
         "version": "202512270018v1",
         "node_name": "MacBook Air M1",
         "enabled": true,
-        "cache_path": "./temp.json"
+        "cache_path": "./temp.json",
+        "platform": "MacOS"
         },
     "region":{
         "hostname": "MacBook Air M1",
@@ -16,7 +17,7 @@
             "name": "shell test(ping)",
             "type": "bash",
             "command": "ping 8.8.8.8 -t 4",
-            "keyword": ["4 packets received"],
+            "keyword": ["4 packets received","已接收 = 4"],
             "warnword": [],
             "readline": 0,
             "ping": false,
