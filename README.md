@@ -1,7 +1,5 @@
 # UptimeKuma Agent
 
-## English
-
 An agent for UptimeKuma to monitor shell commands, systemd services, or other targets.
 
 - [WARN] This repo is still work in progress
