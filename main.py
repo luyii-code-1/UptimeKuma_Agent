@@ -22,6 +22,8 @@ import argparse
 # 4.Develop the Threading models
 ### Now
 # Bash check is ok and work healthyly
+# Now developing http check
+# Systemd check in pending
 
 COLOR_RESET = "\033[0m"
 COLOR_DEBUG = "\033[36m"    # Cyan
