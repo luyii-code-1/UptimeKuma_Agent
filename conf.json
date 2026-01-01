@@ -19,8 +19,8 @@
             "name": "shell test(ping)",
             "enabled": true,
             "type": "bash",
-            "command": "ping 8.8.8.8 -t 4",
-            "keyword": ["4 packets received","已接收 = 4"],
+            "command": "ping 8.8.8.8 -t 1",
+            "keyword": ["1 packets received"],
             "warnword": [],
             "readline": 0,
             "ping": false,
@@ -28,11 +28,11 @@
         },
         "2":{
             "name": "http test",
-            "enabled": false,
+            "enabled": true,
             "type": "http",
             "url": "https://www.baidu.com",
             "statuscode": [200,301,302],
-            "keyword": ["百度","关于"],
+            "keyword": ["head"],
             "warnword": [],
             "datalevel": 0
         }

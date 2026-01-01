@@ -58,7 +58,39 @@ def warn_print(msg):
 def error_print(msg):
     print(f"{COLOR_ERROR}[ERROR] {msg}{COLOR_RESET}")
 
+def check_in(keyword, tmp_return):#Write by GPT in https://chatgpt.com/share/69569f1b-feac-800c-8992-4b65e356063g-1
+    if keyword is None:
+        return True
+    if isinstance(keyword, str):
+        keyword_list = [keyword]
+    else:
+        keyword_list = keyword
+    if tmp_return is None:
+        return False
+    if isinstance(tmp_return, str):
+        lines = tmp_return.splitlines()
+    else:
+        lines = tmp_return
+    if not keyword_list:
+        return True
 
+    keyword_list = [k.lower() for k in keyword_list]
+
+    for line in lines:
+        line_lower = str(line).lower()
+        for kw in keyword_list:
+            if kw in line_lower:
+                return True
+
+    return False
+
+def everymonitor_thread(everymonitor):
+    result = main_check_services(everymonitor)
+    if result:
+        info_print("Monitor " + everymonitor["name"] + " is UP")
+    else:
+        warn_print("Monitor " + everymonitor["name"] + " is DOWN")
+    
 def start_threads(everymonitor):
 
     if debug:
@@ -69,14 +101,14 @@ def start_threads(everymonitor):
         debug_print("Config: " + str(everymonitor))             # Print Value
         for tmp_counter_1 in everymonitor:
             debug_print(tmp_counter_1 + " : " + str(everymonitor[tmp_counter_1]))
-
-    result = main_check_services(everymonitor)
-
+    #This will be Threading part in future
+    everymonitor_thread(everymonitor)
 
 def main_check_services(conf_monitor):
 
     if debug:
         debug_print("===== Now Running main_check_services() =====")
+    
     if conf_monitor["enabled"] == True:
         type = conf_monitor["type"]  # Support 2 types now: bash, http
         if type == "bash":
@@ -87,6 +119,9 @@ def main_check_services(conf_monitor):
             debug_print("WIP: Unsupported monitor type: " + type)
     else:
         is_up = False#May use another types
+        if  debug:
+            debug_print("Monitor is disabled")
+
 
     result = is_up#Temply only is_up for now[Work in Process]
     return is_up
@@ -127,7 +162,8 @@ def http_check(conf_monitor):
         error_print("HTTP request error: " + str(e))# There is an Bug in Windows that havn't fix yet：[ERROR] HTTP request error: HTTPSConnectionPool(host='www.baidu.com', port=443): Max retries exceeded with url: / (Caused by ProxyError('Unable to connect to proxy', FileNotFoundError(2, 'No such file or directory')))
     
     tmp_process_output_list = tmp_return.split("\n")    #Use \n to split lines,May Change later(Very long time!)
-    debug_print("HTTP Check - Raw Output: " + str(tmp_process_output_list))
+    if debug and False:#Temply disabled
+        debug_print("HTTP Check - Raw Output: " + str(tmp_process_output_list))
 
     if tmp_is_return and False:   # read last any line [Work in Process](DISABLED)
         if debug:
@@ -145,34 +181,32 @@ def http_check(conf_monitor):
 
         if debug:
             debug_print("Http Check - Final Output: " + str(final_check_list))
-    if debug:
+    if debug and False:#Have been used
         debug_print("Http Check - Is Return: " + str(tmp_is_return))
     if tmp_is_return:   # Request executed successfully
-        if debug:
-            debug_print("HTTP Check - Process Output: " + str(tmp_process_output_list))
         
         # Check status code
-        if tmp_status_code == statuscode:
+        if tmp_status_code in statuscode:
             if debug:
                 debug_print("HTTP Check - Status Code Matched")
-            # Check keyword    
-            for line in tmp_return:
-                if keyword in line:
-                    if debug:
-                        debug_print("HTTP Check - Keyword Matched")
-                    # Check warnword
-                    if warnword in tmp_return and False:# [Work in Progress]
-                        if debug:
-                            debug_print("HTTP Check - Warnword Matched")
-                    status_is_up = True
-                else:
-                    if debug:
-                        warn_print("HTTP Check - Keyword Not Matched")
-                    status_is_up = False
-            else:
+            status_is_up = False
+            if  check_in(warnword, tmp_return):
+                status_is_up = True
                 if debug:
-                    warn_print("HTTP Check - Status Code Not Matched")
-                status_is_up = False
+                    debug_print("HTTP Check - Keyword Matched")
+            else:
+                status_is_up = True
+                if debug:
+                    debug_print("HTTP Check - Keyword Not Matched")
+            
+        else:
+            if debug:
+                warn_print("HTTP Check - Status Code Not Matched")
+            status_is_up = False
+    else:
+        if debug:
+            warn_print("HTTP Check - Request Failed")
+        status_is_up = False
     
     return status_is_up#Temply use only
 
@@ -254,7 +288,7 @@ def bash_check(conf_monitor):
                 debug_print(f"Bash Check - Matched line: {matched_line}")
                 debug_print("Bash Check - Monitor " + name + " is UP")
 
-            info_print("Monitor " + name + " is UP")
+            debug_print("Monitor " + name + " is UP")
             status_is_up = True
 
             if datalevel == 0:
