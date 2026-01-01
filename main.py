@@ -1,17 +1,19 @@
-import os
+import sys
 import json
-import requests
 import subprocess
-import time
-import threading
+#import threading
 import argparse
+import requests
+
+"""UptimeKuma Agent main module."""
 
 # UptimeKuma Agent v0.0(Work in Progress)
-# This is a program that can use UptimeKuma to monitor shell or systemed etc. target
-# Developer:Luyii 
+# This is a program that can use UptimeKuma to monitor shell or systemed etc. targe
+# Developer:Luyii
 # mail:root@luyii.cn
 
-# Warning! This code is developed in MacOS environment, may not fully compatible with Windows or Linux system.
+# Warning! This code is developed in MacOS environment,
+# may not fully compatible with Windows or Linux system.
 # For example ,ping usage as "ping 8.8.8.8 -t 4" but "ping 8.8.8.8" in Windows.
 
 # Lasts update: 2025-12-28 00:28 on Macbook Air M1(202512280028v1)
@@ -33,6 +35,8 @@ COLOR_ERROR = "\033[31;1m"  # Bold Red
 
 
 def parse_args():   # debug mode
+    def parse_args():
+        """Parse CLI arguments."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--debug",
@@ -42,23 +46,26 @@ def parse_args():   # debug mode
     return parser.parse_args()
 
 
-# =========================
-# Logger Functions
-# =========================
 def debug_print(msg):
+    """Print debug message."""
     if debug:
         print(f"{COLOR_DEBUG}[DEBUG] {msg}{COLOR_RESET}")
 
 def info_print(msg):
+    """Print info message."""
     print(f"{COLOR_INFO}[INFO] {msg}{COLOR_RESET}")
 
 def warn_print(msg):
+    """Print warn message"""
     print(f"{COLOR_WARN}[WARN] {msg}{COLOR_RESET}")
 
 def error_print(msg):
+    """Print error message"""
     print(f"{COLOR_ERROR}[ERROR] {msg}{COLOR_RESET}")
 
-def check_in(keyword, tmp_return):#Write by GPT in https://chatgpt.com/share/69569f1b-feac-800c-8992-4b65e356063g-1
+def check_in(keyword, tmp_return):#Write by GPT in
+    # https://chatgpt.com/share/69569f1b-feac-800c-8992-4b65e356063g-1
+    """Check if str in list"""
     if keyword is None:
         return True
     if isinstance(keyword, str):
@@ -85,14 +92,17 @@ def check_in(keyword, tmp_return):#Write by GPT in https://chatgpt.com/share/695
     return False
 
 def everymonitor_thread(everymonitor):
+    """Every threads program"""
     result = main_check_services(everymonitor)
     if result:
         info_print("Monitor " + everymonitor["name"] + " is UP")
     else:
         warn_print("Monitor " + everymonitor["name"] + " is DOWN")
-    
-def start_threads(everymonitor):
 
+    info_print(result)
+
+def start_threads(everymonitor):
+    """Creat Threads"""
     if debug:
         debug_print("===== Now Running start_threads() =====")
 
@@ -105,32 +115,33 @@ def start_threads(everymonitor):
     everymonitor_thread(everymonitor)
 
 def main_check_services(conf_monitor):
-
+    """Check Target"""
     if debug:
         debug_print("===== Now Running main_check_services() =====")
-    
-    if conf_monitor["enabled"] == True:
-        type = conf_monitor["type"]  # Support 2 types now: bash, http
-        if type == "bash":
-            is_up = bash_check(conf_monitor)
-        elif type == "http":
-            is_up = http_check(conf_monitor)
+
+    if conf_monitor["enabled"]:
+        monitor_type = conf_monitor["type"]  # Support 2 types now: bash, http
+        if monitor_type == "bash":
+            status_is_up = bash_check(conf_monitor)
+        elif monitor_type == "http":
+            status_is_up = http_check(conf_monitor)
         else:
-            debug_print("WIP: Unsupported monitor type: " + type)
+            debug_print("WIP: Unsupported monitor type: " + monitor_type)
     else:
-        is_up = False#May use another types
+        status_is_up = False#May use another types
         if  debug:
             debug_print("Monitor is disabled")
 
 
-    result = is_up#Temply only is_up for now[Work in Process]
-    return is_up
+    result = status_is_up#Temply only status_is_up for now[Work in Process]
+    return status_is_up
 
 
 def http_check(conf_monitor):
+    """Check Http Target"""
     if debug:
         debug_print("===== Now Running http_check() =====")
-    
+
     name = conf_monitor["name"]
     url = conf_monitor["url"]
     statuscode = conf_monitor["statuscode"]
@@ -145,11 +156,11 @@ def http_check(conf_monitor):
         debug_print("HTTP Check - Keyword: " + str(keyword))
         debug_print("HTTP Check - Warnword: " + str(warnword))  # [Work in Process](DISABLED)
         debug_print("HTTP Check - Datalevel: " + str(datalevel))
-    
+
     try:
         response = requests.get(url, timeout=30)
         tmp_is_return = True
-        tmp_return = response.text
+        tmp_return = response.tex
         tmp_status_code = response.status_code
         if debug:
             debug_print("HTTP Check - Response Status Code: " + str(tmp_status_code))
@@ -159,9 +170,10 @@ def http_check(conf_monitor):
         tmp_is_return = False
         tmp_return = ""
         tmp_status_code = None
-        error_print("HTTP request error: " + str(e))# There is an Bug in Windows that havn't fix yet：[ERROR] HTTP request error: HTTPSConnectionPool(host='www.baidu.com', port=443): Max retries exceeded with url: / (Caused by ProxyError('Unable to connect to proxy', FileNotFoundError(2, 'No such file or directory')))
-    
-    tmp_process_output_list = tmp_return.split("\n")    #Use \n to split lines,May Change later(Very long time!)
+        error_print("HTTP request error: " + str(e))
+
+    tmp_process_output_list = tmp_return.split("\n")
+    #Use \n to split lines,May Change later(Very long time!)
     if debug and False:#Temply disabled
         debug_print("HTTP Check - Raw Output: " + str(tmp_process_output_list))
 
@@ -183,8 +195,9 @@ def http_check(conf_monitor):
             debug_print("Http Check - Final Output: " + str(final_check_list))
     if debug and False:#Have been used
         debug_print("Http Check - Is Return: " + str(tmp_is_return))
+    status_is_up = False
     if tmp_is_return:   # Request executed successfully
-        
+
         # Check status code
         if tmp_status_code in statuscode:
             if debug:
@@ -198,7 +211,7 @@ def http_check(conf_monitor):
                 status_is_up = True
                 if debug:
                     debug_print("HTTP Check - Keyword Not Matched")
-            
+
         else:
             if debug:
                 warn_print("HTTP Check - Status Code Not Matched")
@@ -207,11 +220,11 @@ def http_check(conf_monitor):
         if debug:
             warn_print("HTTP Check - Request Failed")
         status_is_up = False
-    
+
     return status_is_up#Temply use only
 
 def bash_check(conf_monitor):
-
+    """Check Bash Target"""
     if debug:
         debug_print("===== Now Running bash_check() =====")
 
@@ -244,7 +257,8 @@ def bash_check(conf_monitor):
         tmp_return = ""
         error_print("Bash command error: " + str(e))
 
-    tmp_process_output_list = tmp_return.split("\n")    #Use \n to split lines,May Change later(Very long time!)
+    tmp_process_output_list = tmp_return.split("\n")
+    #Use \n to split lines,May Change later(Very long time!)
     debug_print("Bash Check - Raw Output: " + str(tmp_process_output_list))
 
     if tmp_is_return and False:   # read last any line [Work in Process](DISABLED)
@@ -264,10 +278,11 @@ def bash_check(conf_monitor):
         if debug:
             debug_print("Bash Check - Final Output: " + str(final_check_list))
 
-
+    status_is_up = False
     if tmp_is_return:   # Command executed successfully
-        # This part write by Copilot 
-        #Check if keywword is in output,can't use 'if xx in xx' because keyword not actually is list
+        # This part write by Copilo
+        #Check if keywword is in output,can't use 'if xx in xx'
+        # because keyword not actually is lis
         keyword_matched = False
         matched_kw = None
         matched_line = None
@@ -310,7 +325,7 @@ def bash_check(conf_monitor):
 
 
 def __init__():
-
+    """Main"""
     if debug:
         debug_print("===== Now Running init_conf() =====")
 
@@ -323,24 +338,26 @@ def __init__():
     raw_monitors = raw_conf["monitors"]
 
     # Process Meta
-    version = raw_meta["version"]
+    #version = raw_meta["version"]
     node_name = raw_meta["node_name"]
     cache_path = raw_meta["cache_path"]
     enabled = raw_meta["enabled"]
     cloud_control = raw_meta["cloud_control"]
     cloud_control_url = raw_meta["cloud_control_url"]
-    
+
     try:
         platform = raw_meta.get("platform", "Unknown")
     except Exception as e:
         platform = "Unknown"
         debug_print("Error when getting platform field: " + str(e))
-    
+
     if platform == "Unknown":
-        warn_print("Platform not specified in config, defaulting to 'Unknown', this Program can't run as an Unknow Platform!")
-        warn_print("Please configure the 'platform' field in conf.json to 'Windows', 'Linux' or 'MacOS' accordingly.")
+        warn_print("Platform not specified in config, defaulting to 'Unknown', ")
+        warn_print("this Program can't run as an Unknow Platform!")
+        warn_print("Please configure the 'platform' field in conf.json ")
+        warn_print("to 'Windows', 'Linux' or 'MacOS' accordingly.")
         warn_print("This Program don't check the command but just warn you.")
-        os.exit()
+        sys.exit()
 
     # Process Region
     hosts_name = raw_region["hostname"]
@@ -348,14 +365,26 @@ def __init__():
     server = raw_region["server"]
     token = raw_region["token"]
 
+    print(
+        f"UptimeKuma_Agent\n",
+        #f"Version: {version}\n"
+        f"Node Name: {node_name}\n",
+        f"Platform: {platform}\n",
+        f"Hostname: {hosts_name}\n",
+        f"Server: {server}\n",
+        f"Token: {token}\n",
+        f"Cloud Control: {cloud_control}\n",
+        f"Cloud Control URL: {cloud_control_url}\n"
+        f"Cache Path: {cache_path}\n"
+        
+    )
+
     # Process Monitors
     for everymonitor in raw_monitors:
         start_threads(raw_monitors[everymonitor])
 
 
-# =========================
-# Entry
-# =========================
+
 args = parse_args()
 debug = args.debug
 
