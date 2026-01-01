@@ -340,7 +340,7 @@ def __init__():
         warn_print("Platform not specified in config, defaulting to 'Unknown', this Program can't run as an Unknow Platform!")
         warn_print("Please configure the 'platform' field in conf.json to 'Windows', 'Linux' or 'MacOS' accordingly.")
         warn_print("This Program don't check the command but just warn you.")
-        os.stop()
+        os.exit()
 
     # Process Region
     hosts_name = raw_region["hostname"]
