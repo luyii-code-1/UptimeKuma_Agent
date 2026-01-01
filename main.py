@@ -70,22 +70,27 @@ def start_threads(everymonitor):
         for tmp_counter_1 in everymonitor:
             debug_print(tmp_counter_1 + " : " + str(everymonitor[tmp_counter_1]))
 
-    main_check_services(everymonitor)
+    result = main_check_services(everymonitor)
 
 
 def main_check_services(conf_monitor):
 
     if debug:
         debug_print("===== Now Running main_check_services() =====")
-
-    type = conf_monitor["type"]  # Support 2 types now: bash, http
-    if type == "bash":
-        is_up = bash_check(conf_monitor)
-    elif type == "http":
-        is_up = http_check(conf_monitor)
+    if conf_monitor["enabled"] == True:
+        type = conf_monitor["type"]  # Support 2 types now: bash, http
+        if type == "bash":
+            is_up = bash_check(conf_monitor)
+        elif type == "http":
+            is_up = http_check(conf_monitor)
+        else:
+            debug_print("WIP: Unsupported monitor type: " + type)
     else:
-        debug_print("WIP: Unsupported monitor type: " + type)
-###################Last Work Here####################
+        is_up = False#May use another types
+
+    result = is_up#Temply only is_up for now[Work in Process]
+    return is_up
+
 
 def http_check(conf_monitor):
     if debug:
@@ -105,7 +110,7 @@ def http_check(conf_monitor):
         debug_print("HTTP Check - Keyword: " + str(keyword))
         debug_print("HTTP Check - Warnword: " + str(warnword))  # [Work in Process](DISABLED)
         debug_print("HTTP Check - Datalevel: " + str(datalevel))
-
+    
     try:
         response = requests.get(url, timeout=30)
         tmp_is_return = True
@@ -119,11 +124,57 @@ def http_check(conf_monitor):
         tmp_is_return = False
         tmp_return = ""
         tmp_status_code = None
-        error_print("HTTP request error: " + str(e))# There is an Bug that havn't fix yet：[ERROR] HTTP request error: HTTPSConnectionPool(host='www.baidu.com', port=443): Max retries exceeded with url: / (Caused by ProxyError('Unable to connect to proxy', FileNotFoundError(2, 'No such file or directory')))
+        error_print("HTTP request error: " + str(e))# There is an Bug in Windows that havn't fix yet：[ERROR] HTTP request error: HTTPSConnectionPool(host='www.baidu.com', port=443): Max retries exceeded with url: / (Caused by ProxyError('Unable to connect to proxy', FileNotFoundError(2, 'No such file or directory')))
     
     tmp_process_output_list = tmp_return.split("\n")    #Use \n to split lines,May Change later(Very long time!)
     debug_print("HTTP Check - Raw Output: " + str(tmp_process_output_list))
-#########Last Work Here#########
+
+    if tmp_is_return and False:   # read last any line [Work in Process](DISABLED)
+        if debug:
+            debug_print("Http Check - Output: " + str(tmp_process_output_list))
+
+        final_check_list = []
+        try:
+            for line in range(len(tmp_process_output_list)):
+                final_check_list.append(
+                    tmp_process_output_list[len(tmp_process_output_list) - line]
+                )
+        except Exception as e:
+            if debug:
+                debug_print("Http Check - Readline Error: " + str(e))
+
+        if debug:
+            debug_print("Http Check - Final Output: " + str(final_check_list))
+    if debug:
+        debug_print("Http Check - Is Return: " + str(tmp_is_return))
+    if tmp_is_return:   # Request executed successfully
+        if debug:
+            debug_print("HTTP Check - Process Output: " + str(tmp_process_output_list))
+        
+        # Check status code
+        if tmp_status_code == statuscode:
+            if debug:
+                debug_print("HTTP Check - Status Code Matched")
+            # Check keyword    
+            for line in tmp_return:
+                if keyword in line:
+                    if debug:
+                        debug_print("HTTP Check - Keyword Matched")
+                    # Check warnword
+                    if warnword in tmp_return and False:# [Work in Progress]
+                        if debug:
+                            debug_print("HTTP Check - Warnword Matched")
+                    status_is_up = True
+                else:
+                    if debug:
+                        warn_print("HTTP Check - Keyword Not Matched")
+                    status_is_up = False
+            else:
+                if debug:
+                    warn_print("HTTP Check - Status Code Not Matched")
+                status_is_up = False
+    
+    return status_is_up#Temply use only
 
 def bash_check(conf_monitor):
 
@@ -181,6 +232,7 @@ def bash_check(conf_monitor):
 
 
     if tmp_is_return:   # Command executed successfully
+        # This part write by Copilot 
         #Check if keywword is in output,can't use 'if xx in xx' because keyword not actually is list
         keyword_matched = False
         matched_kw = None
@@ -223,7 +275,7 @@ def bash_check(conf_monitor):
     return status_is_up
 
 
-def init_loadconf():
+def __init__():
 
     if debug:
         debug_print("===== Now Running init_conf() =====")
@@ -241,6 +293,8 @@ def init_loadconf():
     node_name = raw_meta["node_name"]
     cache_path = raw_meta["cache_path"]
     enabled = raw_meta["enabled"]
+    cloud_control = raw_meta["cloud_control"]
+    cloud_control_url = raw_meta["cloud_control_url"]
     
     try:
         platform = raw_meta.get("platform", "Unknown")
@@ -276,4 +330,4 @@ if debug:
 
 
 if __name__ == "__main__":
-    init_loadconf()
+    __init__()

@@ -4,7 +4,9 @@
         "node_name": "MacBook Air M1",
         "enabled": true,
         "cache_path": "./temp.json",
-        "platform": "MacOS"
+        "platform": "MacOS",
+        "cloud_control": false,
+        "cloud_control_url": "https://apis.luyii.cn/api/v1/%nodename/lastst_config.json"
         },
     "region":{
         "hostname": "MacBook Air M1",
@@ -15,6 +17,7 @@
     "monitors":{
         "1":{
             "name": "shell test(ping)",
+            "enabled": true,
             "type": "bash",
             "command": "ping 8.8.8.8 -t 4",
             "keyword": ["4 packets received","已接收 = 4"],
@@ -25,6 +28,7 @@
         },
         "2":{
             "name": "http test",
+            "enabled": false,
             "type": "http",
             "url": "https://www.baidu.com",
             "statuscode": [200,301,302],
