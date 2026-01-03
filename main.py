@@ -16,16 +16,6 @@ import requests
 # may not fully compatible with Windows or Linux system.
 # For example ,ping usage as "ping 8.8.8.8 -t 4" but "ping 8.8.8.8" in Windows.
 
-# Lasts update: 2025-12-28 00:28 on Macbook Air M1(202512280028v1)
-### To do List:
-# 1.Complete the http check function
-# 2.Conplete the final status report function
-# 3.Develop the requests models
-# 4.Develop the Threading models
-### Now
-# Bash check is ok and work healthyly
-# Now developing http check
-# Systemd check in pending
 
 COLOR_RESET = "\033[0m"
 COLOR_DEBUG = "\033[36m"    # Cyan
