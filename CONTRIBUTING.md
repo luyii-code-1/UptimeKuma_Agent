@@ -2,7 +2,7 @@
 
 [English](CONTRIBUTING.md) | [简体中文](CONTRIBUTING_zh-CN.md)
 
-Thank you for your interest in the UptimeKuma Agent project! This guide will help you understand how to contribute to the project.
+Thank you for your interest in the UptimeKuma Agent project! This guide will help you understand how to contribute to the project. 
 
 ## Code Submission Requirements
 
