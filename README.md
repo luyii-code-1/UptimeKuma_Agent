@@ -4,7 +4,7 @@
 
 An agent for UptimeKuma to monitor shell commands, systemd services, or other targets.
 
-[WARN] This repo is still work in progress
+[WARN] This repo is still work in progress,Version:0.0.0
 
 ### Future Features
 
