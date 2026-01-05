@@ -89,7 +89,7 @@ def everymonitor_thread(everymonitor):
     else:
         warn_print("Monitor " + everymonitor["name"] + " is DOWN")
 
-    info_print(result)
+    info_print('Is up?' + str(result))
 
 def start_threads(everymonitor):
     """Creat Threads"""
@@ -150,7 +150,7 @@ def http_check(conf_monitor):
     try:
         response = requests.get(url, timeout=30)
         tmp_is_return = True
-        tmp_return = response.tex
+        tmp_return = response.text
         tmp_status_code = response.status_code
         if debug:
             debug_print("HTTP Check - Response Status Code: " + str(tmp_status_code))
