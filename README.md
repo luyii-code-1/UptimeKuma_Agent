@@ -4,7 +4,7 @@
 
 A monitoring client for UptimeKuma, designed to monitor shell commands, systemd services, and other types of services.
 
-[WARN] This repo is still work in progress,Version:0.0.0
+[Warning] This repository is still under active development.
 
 # Understanding the Project
 
