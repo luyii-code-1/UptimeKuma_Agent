@@ -9,6 +9,7 @@ Thank you for your interest in the UptimeKuma Agent project! This guide will hel
 ### Code Quality Standards
 - **No AI-Generated Code**: Submitted code must be written by humans or reviewed by humans. Do not use AI tools to generate entire files or large code segments.
 - **Reasonable Comments**: Code should include appropriate comments explaining complex logic, function purposes, and key steps. Comments should be clear, concise, and in English or Chinese.
+- This batch will run on custom devices so that is must make sure that can't become a blackdoor torjan program,that is why we need pass CodeQL scan.
 
 ### CI/CD Checks
 Before submitting code, ensure your changes pass the following automated checks:
