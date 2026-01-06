@@ -114,12 +114,7 @@ def everymonitor_thread(everymonitor, server, token):
         sta = None
         trn = None
 
-    if sta == 200 and trn == '{"ok":true}':
-        info_print("UptimeKuma Server updated successfully for monitor " + everymonitor["name"])
-    else:
-        error_print("UptimeKuma Server update failed for monitor " + everymonitor["name"])
-    
-    
+    info_print('Is up?' + str(result))
 
 def start_threads(everymonitor, server, token):
     """Creat Threads"""
