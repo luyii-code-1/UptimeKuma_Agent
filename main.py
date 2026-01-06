@@ -1,9 +1,12 @@
 import sys
 import json
 import subprocess
-import threading
+#import threading
 import argparse
 import requests
+
+# pylint: disable=too-many-branches,too-many-statements,too-many-locals
+
 
 """UptimeKuma Agent main module."""
 
@@ -53,8 +56,7 @@ def error_print(msg):
     """Print error message"""
     print(f"{COLOR_ERROR}[ERROR] {msg}{COLOR_RESET}")
 
-def check_in(keyword, tmp_return):#Write by GPT in
-    # https://chatgpt.com/share/69569f1b-feac-800c-8992-4b65e356063g-1
+def check_in(keyword, tmp_return):
     """Check if str in list"""
     if keyword is None:
         return True
@@ -81,17 +83,45 @@ def check_in(keyword, tmp_return):#Write by GPT in
 
     return False
 
-def everymonitor_thread(everymonitor):
+def everymonitor_thread(everymonitor, server, token):
     """Every threads program"""
     result = main_check_services(everymonitor)
     if result:
         info_print("Monitor " + everymonitor["name"] + " is UP")
+        req_sts = "up"
     else:
         warn_print("Monitor " + everymonitor["name"] + " is DOWN")
+        req_sts = "down"
+        
+    # Build Request to UptimeKuma Server
+    #req_msg = ? (WIP)
+    #req_ping = ? (WIP)
+    api = everymonitor["api"]
+    if debug:
+        debug_print("API Key: " + api)
+    request = server + api + "?status=" + req_sts
+    if debug:
+        debug_print("Request API URL: " + request)
+    try:
+        response = requests.get(request, timeout=30)
+        trn = response.text
+        sta = response.status_code
+        if debug:
+            debug_print("UptimeKuma Server Response Status Code: " + str(response.status_code))
+            debug_print("UptimeKuma Server Response Text: " + str(response.text))
+    except requests.RequestException as e:
+        error_print("UptimeKuma Server request error: " + str(e))
+        sta = None
+        trn = None
 
-    info_print('Is up?' + str(result))
+    if sta == 200 and trn == '{"ok":true}':
+        info_print("UptimeKuma Server updated successfully for monitor " + everymonitor["name"])
+    else:
+        error_print("UptimeKuma Server update failed for monitor " + everymonitor["name"])
+    
+    
 
-def start_threads(everymonitor):
+def start_threads(everymonitor, server, token):
     """Creat Threads"""
     if debug:
         debug_print("===== Now Running start_threads() =====")
@@ -102,7 +132,7 @@ def start_threads(everymonitor):
         for tmp_counter_1 in everymonitor:
             debug_print(tmp_counter_1 + " : " + str(everymonitor[tmp_counter_1]))
     #This will be Threading part in future
-    everymonitor_thread(everymonitor)
+    everymonitor_thread(everymonitor, server, token)
 
 def main_check_services(conf_monitor):
     """Check Target"""
@@ -138,6 +168,7 @@ def http_check(conf_monitor):
     keyword = conf_monitor["keyword"]
     warnword = conf_monitor["warnword"]
     datalevel = conf_monitor["datalevel"]
+    readline = conf_monitor["readline"]
 
     if debug:
         debug_print("HTTP Check - Name: " + name)
@@ -146,6 +177,8 @@ def http_check(conf_monitor):
         debug_print("HTTP Check - Keyword: " + str(keyword))
         debug_print("HTTP Check - Warnword: " + str(warnword))  # [Work in Process](DISABLED)
         debug_print("HTTP Check - Datalevel: " + str(datalevel))
+        debug_print("HTTP Check - Readline: " + str(readline))
+        
 
     try:
         response = requests.get(url, timeout=30)
@@ -154,7 +187,6 @@ def http_check(conf_monitor):
         tmp_status_code = response.status_code
         if debug:
             debug_print("HTTP Check - Response Status Code: " + str(tmp_status_code))
-            debug_print("HTTP Check - Response Body: " + str(tmp_return))
 
     except requests.RequestException as e:
         tmp_is_return = False
@@ -163,28 +195,16 @@ def http_check(conf_monitor):
         error_print("HTTP request error: " + str(e))
 
     tmp_process_output_list = tmp_return.split("\n")
-    #Use \n to split lines,May Change later(Very long time!)
-    if debug and False:#Temply disabled
+
+    if debug:
         debug_print("HTTP Check - Raw Output: " + str(tmp_process_output_list))
 
-    if tmp_is_return and False:   # read last any line [Work in Process](DISABLED)
+    if tmp_is_return and readline != 0: #  Readline
+        readline += 1 if tmp_process_output_list[-1] == "" else 0
+        tmp_return = tmp_process_output_list[int(-readline)]
         if debug:
-            debug_print("Http Check - Output: " + str(tmp_process_output_list))
-
-        final_check_list = []
-        try:
-            for line in range(len(tmp_process_output_list)):
-                final_check_list.append(
-                    tmp_process_output_list[len(tmp_process_output_list) - line]
-                )
-        except Exception as e:
-            if debug:
-                debug_print("Http Check - Readline Error: " + str(e))
-
-        if debug:
-            debug_print("Http Check - Final Output: " + str(final_check_list))
-    if debug and False:#Have been used
-        debug_print("Http Check - Is Return: " + str(tmp_is_return))
+            debug_print("Bash Check - Final Output: " + str(tmp_return))
+    
     status_is_up = False
     if tmp_is_return:   # Request executed successfully
 
@@ -223,6 +243,7 @@ def bash_check(conf_monitor):
     keyword = conf_monitor["keyword"]
     warnword = conf_monitor["warnword"]
     datalevel = conf_monitor["datalevel"]
+    readline = conf_monitor["readline"]
 
     if debug:
         debug_print("Bash Check - Name: " + name)
@@ -230,6 +251,7 @@ def bash_check(conf_monitor):
         debug_print("Bash Check - Keyword: " + str(keyword))
         debug_print("Bash Check - Warnword: " + str(warnword))  # [Work in Process](DISABLED)
         debug_print("Bash Check - Datalevel: " + str(datalevel))
+        debug_print("Bash Check - Readline: " + str(readline))
 
     try:    # run bash command
         result = subprocess.run(
@@ -248,69 +270,38 @@ def bash_check(conf_monitor):
         error_print("Bash command error: " + str(e))
 
     tmp_process_output_list = tmp_return.split("\n")
-    #Use \n to split lines,May Change later(Very long time!)
+
     debug_print("Bash Check - Raw Output: " + str(tmp_process_output_list))
 
-    if tmp_is_return and False:   # read last any line [Work in Process](DISABLED)
+    if tmp_is_return and readline != 0: #  Readline
+        readline += 1 if tmp_process_output_list[-1] == "" else 0
+        tmp_return = tmp_process_output_list[int(-readline)]
         if debug:
-            debug_print("Bash Check - Output: " + str(tmp_process_output_list))
-
-        final_check_list = []
-        try:
-            for line in range(len(tmp_process_output_list)):
-                final_check_list.append(
-                    tmp_process_output_list[len(tmp_process_output_list) - line]
-                )
-        except Exception as e:
-            if debug:
-                debug_print("Bash Check - Readline Error: " + str(e))
-
-        if debug:
-            debug_print("Bash Check - Final Output: " + str(final_check_list))
+            debug_print("Bash Check - Final Output: " + str(tmp_return))
 
     status_is_up = False
     if tmp_is_return:   # Command executed successfully
-        # This part write by Copilo
-        #Check if keywword is in output,can't use 'if xx in xx'
-        # because keyword not actually is lis
-        keyword_matched = False
-        matched_kw = None
-        matched_line = None
-
-        for line in tmp_process_output_list:
-            for kw in keyword:
-                if kw in line:
-                    keyword_matched = True
-                    matched_kw = kw
-                    matched_line = line
-                    break
-            if keyword_matched:
-                break
-
-        if keyword_matched:
-            if debug:
-                debug_print(f"Bash Check - Keyword matched: {matched_kw}")
-                debug_print(f"Bash Check - Matched line: {matched_line}")
-                debug_print("Bash Check - Monitor " + name + " is UP")
-
-            debug_print("Monitor " + name + " is UP")
+        if  check_in(keyword, tmp_return):
             status_is_up = True
-
-            if datalevel == 0:
-                return_msg = matched_line
-
-        else:
             if debug:
-                debug_print("Bash Check - Monitor " + name + " is DOWN")
-            warn_print("Monitor " + name + " is DOWN")
+                debug_print("Bash Check - Keyword Matched")
+        else:
             status_is_up = False
-
+            if debug:
+                debug_print("Bash Check - Keyword Not Matched")
+        # TODO: Haven't develpo yet
+        if check_in(warnword, tmp_return) and False:
+            status_is_up = True
+            if debug:
+                debug_print("Bash Check - Warnword Matched")
+        elif False:
+            status_is_up = False
+            if debug:
+                debug_print("Bash Check - Warnword Not Matched")
     else:
         if debug:
-            debug_print("Bash Check - Monitor " + name + " Command Error")
-        error_print("Monitor " + name + " Command Error")
-        status_is_up = False
-
+            warn_print("Bash Check - Command Failed")
+        status_is_up = False    
     return status_is_up
 
 
@@ -357,7 +348,10 @@ def __init__():
 
     print(
         f"UptimeKuma_Agent\n",
-        #f"Version: {version}\n"
+        f"UptimeKuma Agent v0.0(Work in Progress)\n",
+        f"This is a program that can use UptimeKuma to monitor shell or systemed etc. targe\n",
+        f"Developer:Luyii\n",
+        f"mail:root@luyii.cn \n\n",
         f"Node Name: {node_name}\n",
         f"Platform: {platform}\n",
         f"Hostname: {hosts_name}\n",
@@ -371,7 +365,7 @@ def __init__():
 
     # Process Monitors
     for everymonitor in raw_monitors:
-        start_threads(raw_monitors[everymonitor])
+        start_threads(raw_monitors[everymonitor], server ,token)
 
 
 

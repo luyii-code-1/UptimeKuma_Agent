@@ -22,9 +22,10 @@
             "command": "ping 8.8.8.8 -t 1",
             "keyword": ["1 packets received"],
             "warnword": [],
-            "readline": 0,
+            "readline": 2,
             "ping": false,
-            "datalevel": 0
+            "datalevel": 0,
+            "api": "CsUGkIxISU"
         },
         "2":{
             "name": "http test",
@@ -33,8 +34,11 @@
             "url": "https://www.baidu.com",
             "statuscode": [200,301,302],
             "keyword": ["head"],
+            "ping": false,
+            "readline": 0,
             "warnword": [],
-            "datalevel": 0
+            "datalevel": 0,
+            "api": "kcwjnVGRwx"
         }
     }
 }
