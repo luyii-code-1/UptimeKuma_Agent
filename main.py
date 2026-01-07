@@ -7,9 +7,6 @@ import requests
 import  time
 
 
-# pylint: disable=too-many-branches,too-many-statements,too-many-locals
-
-
 """UptimeKuma Agent main module."""
 
 # UptimeKuma Agent v0.0(Work in Progress)
