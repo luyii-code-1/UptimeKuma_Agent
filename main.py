@@ -1,11 +1,10 @@
 import sys
 import json
 import subprocess
-#import threading
+import threading
 import argparse
 import requests
-
-# pylint: disable=too-many-branches,too-many-statements,too-many-locals
+import  time
 
 
 """UptimeKuma Agent main module."""
@@ -14,10 +13,6 @@ import requests
 # This is a program that can use UptimeKuma to monitor shell or systemed etc. targe
 # Developer:Luyii
 # mail:root@luyii.cn
-
-# Warning! This code is developed in MacOS environment,
-# may not fully compatible with Windows or Linux system.
-# For example ,ping usage as "ping 8.8.8.8 -t 4" but "ping 8.8.8.8" in Windows.
 
 
 COLOR_RESET = "\033[0m"
@@ -212,15 +207,18 @@ def http_check(conf_monitor):
             if debug:
                 debug_print("HTTP Check - Status Code Matched")
             status_is_up = False
-            if  check_in(warnword, tmp_return):
+            if  check_in(keyword, tmp_return):
                 status_is_up = True
                 if debug:
                     debug_print("HTTP Check - Keyword Matched")
             else:
-                status_is_up = True
+                status_is_up = False
                 if debug:
                     debug_print("HTTP Check - Keyword Not Matched")
-
+            if check_in(warnword, tmp_return) and warnword != []:
+                status_is_up = False
+                if debug:
+                    debug_print("HTTP Check - Warnword Matched")
         else:
             if debug:
                 warn_print("HTTP Check - Status Code Not Matched")
@@ -288,26 +286,21 @@ def bash_check(conf_monitor):
             status_is_up = False
             if debug:
                 debug_print("Bash Check - Keyword Not Matched")
-        # TODO: Haven't develpo yet
-        if check_in(warnword, tmp_return) and False:
-            status_is_up = True
-            if debug:
-                debug_print("Bash Check - Warnword Matched")
-        elif False:
+        if check_in(warnword, tmp_return) and warnword != []:
             status_is_up = False
             if debug:
-                debug_print("Bash Check - Warnword Not Matched")
+                debug_print("Bash Check - Warnword Matched")
     else:
         if debug:
             warn_print("Bash Check - Command Failed")
         status_is_up = False    
-    return status_is_up
+    return status_is_up#Temply use only
 
 
 def __init__():
     """Main"""
     if debug:
-        debug_print("===== Now Running init_conf() =====")
+        debug_print("===== Now Running __init__() =====")
 
     # Load Raw Config
     raw_conf = json.load(open("./conf.json", "r", encoding="utf-8"))
@@ -318,26 +311,12 @@ def __init__():
     raw_monitors = raw_conf["monitors"]
 
     # Process Meta
-    #version = raw_meta["version"]
-    node_name = raw_meta["node_name"]
-    cache_path = raw_meta["cache_path"]
     enabled = raw_meta["enabled"]
-    cloud_control = raw_meta["cloud_control"]
-    cloud_control_url = raw_meta["cloud_control_url"]
+    if not enabled:
+        sys.stop ()
+    #cloud_control = raw_meta["cloud_control"]
+    #cloud_control_url = raw_meta["cloud_control_url"]
 
-    try:
-        platform = raw_meta.get("platform", "Unknown")
-    except Exception as e:
-        platform = "Unknown"
-        debug_print("Error when getting platform field: " + str(e))
-
-    if platform == "Unknown":
-        warn_print("Platform not specified in config, defaulting to 'Unknown', ")
-        warn_print("this Program can't run as an Unknow Platform!")
-        warn_print("Please configure the 'platform' field in conf.json ")
-        warn_print("to 'Windows', 'Linux' or 'MacOS' accordingly.")
-        warn_print("This Program don't check the command but just warn you.")
-        sys.exit()
 
     # Process Region
     hosts_name = raw_region["hostname"]
@@ -347,19 +326,10 @@ def __init__():
 
     print(
         f"UptimeKuma_Agent\n",
-        f"UptimeKuma Agent v0.0(Work in Progress)\n",
-        f"This is a program that can use UptimeKuma to monitor shell or systemed etc. targe\n",
-        f"Developer:Luyii\n",
-        f"mail:root@luyii.cn \n\n",
         f"Node Name: {node_name}\n",
-        f"Platform: {platform}\n",
         f"Hostname: {hosts_name}\n",
         f"Server: {server}\n",
         f"Token: {token}\n",
-        f"Cloud Control: {cloud_control}\n",
-        f"Cloud Control URL: {cloud_control_url}\n"
-        f"Cache Path: {cache_path}\n"
-        
     )
 
     # Process Monitors

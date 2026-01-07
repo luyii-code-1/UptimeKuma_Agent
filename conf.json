@@ -1,17 +1,14 @@
 {
     "meta":{
-        "version": "202512270018v1",
-        "node_name": "MacBook Air M1",
+        "node_name": "Example",
         "enabled": true,
-        "cache_path": "./temp.json",
-        "platform": "MacOS",
         "cloud_control": false,
-        "cloud_control_url": "https://apis.luyii.cn/api/v1/%nodename/lastst_config.json"
+        "cloud_control_url": "api_point"
         },
     "region":{
-        "hostname": "MacBook Air M1",
-        "node_name": "宁波-CRSO-NNN:00(Macbook Air)",
-        "server": "https://ickpvctx.cn-nb1.rainapp.top/api/push/",
+        "hostname": "Example",
+        "node_name": "Example",
+        "server": "http://192.168.1.2:3001/api/push/",
         "token": ""
         },
     "monitors":{
@@ -34,9 +31,9 @@
             "url": "https://www.baidu.com",
             "statuscode": [200,301,302],
             "keyword": ["head"],
-            "ping": false,
-            "readline": 0,
             "warnword": [],
+            "readline": 0,
+            "ping": false,
             "datalevel": 0,
             "api": "kcwjnVGRwx"
         }
