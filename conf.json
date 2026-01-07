@@ -31,6 +31,8 @@
             "url": "https://www.baidu.com",
             "statuscode": [200,301,302],
             "keyword": ["head"],
+            "ping": false,
+            "readline": 0,
             "warnword": [],
             "readline": 0,
             "ping": false,

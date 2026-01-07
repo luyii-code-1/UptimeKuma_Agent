@@ -1,10 +1,13 @@
 import sys
 import json
 import subprocess
-import threading
+#import threading
 import argparse
 import requests
 import  time
+
+
+# pylint: disable=too-many-branches,too-many-statements,too-many-locals
 
 
 """UptimeKuma Agent main module."""
