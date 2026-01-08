@@ -1,10 +1,10 @@
 import sys
 import json
 import subprocess
-#import threading
+import threading
 import argparse
 import requests
-import  time
+import time
 
 
 """UptimeKuma Agent main module."""
@@ -22,9 +22,8 @@ COLOR_WARN  = "\033[33m"    # Yellow
 COLOR_ERROR = "\033[31;1m"  # Bold Red
 
 
-def parse_args():   # debug mode
-    def parse_args():
-        """Parse CLI arguments."""
+def parse_args():
+    """Parse CLI arguments."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--debug",
@@ -32,8 +31,6 @@ def parse_args():   # debug mode
         help="Enable debug mode"
     )
     return parser.parse_args()
-
-
 def debug_print(msg):
     """Print debug message."""
     if debug:
@@ -78,55 +75,73 @@ def check_in(keyword, tmp_return):
 
     return False
 
-def everymonitor_thread(everymonitor, server, token):
+def everymonitor_thread(stop_event, everymonitor, server, token):
     """Every threads program"""
-    result = main_check_services(everymonitor)
-    if result:
-        info_print("Monitor " + everymonitor["name"] + " is UP")
-        req_sts = "up"
-    else:
-        warn_print("Monitor " + everymonitor["name"] + " is DOWN")
-        req_sts = "down"
-        
-    # Build Request to UptimeKuma Server
-    #req_msg = ? (WIP)
-    #req_ping = ? (WIP)
-    api = everymonitor["api"]
-    if debug:
-        debug_print("API Key: " + api)
-    request = server + api + "?status=" + req_sts
-    if debug:
-        debug_print("Request API URL: " + request)
-    try:
-        response = requests.get(request, timeout=30)
-        trn = response.text
-        sta = response.status_code
+    while not stop_event.is_set():
+        rst_is_up, rst_message, rst_ping = main_check_services(everymonitor)
+        if rst_is_up:
+            info_print("Monitor " + everymonitor["name"] + " is UP")
+            req_sts = "up"
+        else:
+            warn_print("Monitor " + everymonitor["name"] + " is DOWN")
+            req_sts = "down"
+            
+        # Build Request to UptimeKuma Server
+        req_msg = rst_message
+        req_ping = rst_ping
+        api = everymonitor["api"]
         if debug:
-            debug_print("UptimeKuma Server Response Status Code: " + str(response.status_code))
-            debug_print("UptimeKuma Server Response Text: " + str(response.text))
-    except requests.RequestException as e:
-        error_print("UptimeKuma Server request error: " + str(e))
-        sta = None
-        trn = None
+            debug_print("API Key: " + api)
+        request = server + api + "?status=" + req_sts +  "&msg=" + req_msg + "&ping=" + str(req_ping) + "&token=" + token
+        if debug:
+            debug_print("Request API URL: " + request)
+        try:
+            response = requests.get(request, timeout=30)
+            trn = response.text
+            sta = response.status_code
+            if debug:
+                debug_print(everymonitor["name"] + "UptimeKuma Server Response Status Code: " + str(response.status_code))
+                debug_print(everymonitor["name"] + "UptimeKuma Server Response Text: " + str(response.text))
+        except requests.RequestException as e:
+            error_print("UptimeKuma Server request error: " + str(e))
+            sta = None
+            trn = None
 
-    if sta == 200 and trn == '{"ok":true}':
-        info_print("UptimeKuma Server updated successfully for monitor " + everymonitor["name"])
-    else:
-        error_print("UptimeKuma Server update failed for monitor " + everymonitor["name"])
+        if sta == 200 and trn == '{"ok":true}':
+            info_print(everymonitor["name"] + "UptimeKuma Server updated successfully for monitor " + everymonitor["name"])
+        else:
+            error_print(everymonitor["name"] + "UptimeKuma Server update failed for monitor " + everymonitor["name"])
 
-    
+        now = time.time()
+        wait_seconds = 60 - (now % 60)
+        if wait_seconds < 0.5:
+            wait_seconds = 0.5
+        if stop_event.wait(timeout=wait_seconds):
+            break
+
+
 def start_threads(everymonitor, server, token):
     """Creat Threads"""
+    #This will be Threading part in future
+    stop_event = threading.Event()
+    
+    t = threading.Thread(
+    target=everymonitor_thread,
+    args=(stop_event, everymonitor, server, token),
+    daemon=True
+    )
+    
     if debug:
         debug_print("===== Now Running start_threads() =====")
-
     if debug:
         debug_print("Config type: " + str(type(everymonitor)))  # Print Type
         debug_print("Config: " + str(everymonitor))             # Print Value
         for tmp_counter_1 in everymonitor:
             debug_print(tmp_counter_1 + " : " + str(everymonitor[tmp_counter_1]))
-    #This will be Threading part in future
-    everymonitor_thread(everymonitor, server, token)
+        
+    t.start()
+
+    return t, stop_event
 
 def main_check_services(conf_monitor):
     """Check Target"""
@@ -136,19 +151,19 @@ def main_check_services(conf_monitor):
     if conf_monitor["enabled"]:
         monitor_type = conf_monitor["type"]  # Support 2 types now: bash, http
         if monitor_type == "bash":
-            status_is_up = bash_check(conf_monitor)
+            status_is_up, message, ping = bash_check(conf_monitor)
         elif monitor_type == "http":
-            status_is_up = http_check(conf_monitor)
+            status_is_up, message, ping = http_check(conf_monitor)
         else:
             debug_print("WIP: Unsupported monitor type: " + monitor_type)
     else:
-        status_is_up = False#May use another types
+        status_is_up = False
+        message = "Monitor is disabled"
+        ping = "-1"
         if  debug:
             debug_print("Monitor is disabled")
 
-
-    result = status_is_up#Temply only status_is_up for now[Work in Process]
-    return status_is_up
+    return status_is_up, message, ping
 
 
 def http_check(conf_monitor):
@@ -173,7 +188,7 @@ def http_check(conf_monitor):
         debug_print("HTTP Check - Datalevel: " + str(datalevel))
         debug_print("HTTP Check - Readline: " + str(readline))
         
-
+    timmer = time.monotonic()
     try:
         response = requests.get(url, timeout=30)
         tmp_is_return = True
@@ -187,6 +202,8 @@ def http_check(conf_monitor):
         tmp_return = ""
         tmp_status_code = None
         error_print("HTTP request error: " + str(e))
+    finally:
+        ping = time.monotonic() - timmer
 
     tmp_process_output_list = tmp_return.split("\n")
 
@@ -204,31 +221,36 @@ def http_check(conf_monitor):
 
         # Check status code
         if tmp_status_code in statuscode:
+            message = "HTTP Check - Status Code Matched:" + str(statuscode)
             if debug:
-                debug_print("HTTP Check - Status Code Matched")
+                debug_print(message)
             status_is_up = False
             if  check_in(keyword, tmp_return):
                 status_is_up = True
+                message = "HTTP Check - Keyword Matched:" + str(keyword)
                 if debug:
-                    debug_print("HTTP Check - Keyword Matched")
+                    debug_print(message)
             else:
                 status_is_up = False
+                message = "HTTP Check - Keyword Not Matched"
                 if debug:
-                    debug_print("HTTP Check - Keyword Not Matched")
+                    debug_print(message)
             if check_in(warnword, tmp_return) and warnword != []:
                 status_is_up = False
+                message = "HTTP Check - Warnword Matched:" + str(warnword)
                 if debug:
-                    debug_print("HTTP Check - Warnword Matched")
+                    debug_print(message)
         else:
+            message = "HTTP Check - Status Code Not Matched"
             if debug:
-                warn_print("HTTP Check - Status Code Not Matched")
+                warn_print(message)
             status_is_up = False
     else:
         if debug:
             warn_print("HTTP Check - Request Failed")
         status_is_up = False
 
-    return status_is_up#Temply use only
+    return status_is_up, message, ping
 
 def bash_check(conf_monitor):
     """Check Bash Target"""
@@ -250,6 +272,7 @@ def bash_check(conf_monitor):
         debug_print("Bash Check - Datalevel: " + str(datalevel))
         debug_print("Bash Check - Readline: " + str(readline))
 
+    timmer = time.monotonic()
     try:    # run bash command
         result = subprocess.run(
             command,
@@ -265,6 +288,8 @@ def bash_check(conf_monitor):
         tmp_is_return = False
         tmp_return = ""
         error_print("Bash command error: " + str(e))
+    finally:
+        ping = time.monotonic() - timmer
 
     tmp_process_output_list = tmp_return.split("\n")
 
@@ -280,27 +305,31 @@ def bash_check(conf_monitor):
     if tmp_is_return:   # Command executed successfully
         if  check_in(keyword, tmp_return):
             status_is_up = True
+            message = "Bash Check - Keyword Matched:" + str(keyword)
             if debug:
-                debug_print("Bash Check - Keyword Matched")
+                debug_print(message)
         else:
             status_is_up = False
+            message = "Bash Check - Keyword Not Matched"
             if debug:
-                debug_print("Bash Check - Keyword Not Matched")
+                debug_print(message)
         if check_in(warnword, tmp_return) and warnword != []:
             status_is_up = False
+            message = "Bash Check - Warnword Matched:" + str(warnword)
             if debug:
-                debug_print("Bash Check - Warnword Matched")
+                debug_print(message)
     else:
+        message = "Bash Check - Command Failed"
         if debug:
-            warn_print("Bash Check - Command Failed")
+            warn_print(message)
         status_is_up = False    
-    return status_is_up#Temply use only
+    return status_is_up, message, ping
 
 
-def __init__():
+def __main__():
     """Main"""
     if debug:
-        debug_print("===== Now Running __init__() =====")
+        debug_print("===== Now Running __main__() =====")
 
     # Load Raw Config
     raw_conf = json.load(open("./conf.json", "r", encoding="utf-8"))
@@ -313,7 +342,7 @@ def __init__():
     # Process Meta
     enabled = raw_meta["enabled"]
     if not enabled:
-        sys.stop ()
+        sys.exit(0)
     #cloud_control = raw_meta["cloud_control"]
     #cloud_control_url = raw_meta["cloud_control_url"]
 
@@ -333,10 +362,22 @@ def __init__():
     )
 
     # Process Monitors
+    monitor_threads = []
+
     for everymonitor in raw_monitors:
-        start_threads(raw_monitors[everymonitor], server ,token)
-
-
+        t, stop_event = start_threads(raw_monitors[everymonitor], server, token)
+        monitor_threads.append((t, stop_event))
+    
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        info_print("Exiting...")
+        for t, stop_event in monitor_threads:
+            stop_event.set()
+        for t, stop_event in monitor_threads:
+            t.join(timeout=5)
+        sys.exit(0)
 
 args = parse_args()
 debug = args.debug
@@ -346,4 +387,4 @@ if debug:
 
 
 if __name__ == "__main__":
-    __init__()
+    __main__()

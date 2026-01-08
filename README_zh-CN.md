@@ -23,9 +23,9 @@ UptimeKuma Agent 是一个用于 UptimeKuma Push监控类型的客户端，通�
 - [x] Bash命令监控（关键字）
 - [ ] Systemd 服务监控
 - [x] Http 请求监控
-- [ ] 线程循环
+- [x] 线程循环
 - [ ] 完善的日志记录
-- [ ] Debug模式
+- [x] Debug模式
 - [ ] 云配置
 - [ ] 热更新/云控制/云反馈/云执行
 - [ ] 完善的安全性检查

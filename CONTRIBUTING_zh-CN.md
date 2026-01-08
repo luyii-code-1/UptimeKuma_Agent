@@ -34,11 +34,11 @@ UptimeKuma Agent 是一个用于 UptimeKuma Push监控类型的客户端，通�
 - 如果 CI 通过，代码将进入 Copilot 审核阶段。Copilot 将检查代码的整体质量、合规性和最佳实践，之后由我（Owner）审核，通过后适时合并。
 
 ## 如何贡献
-1. Fork 本仓库dev分支
+1. Fork 本仓库d `release` 分支
 2. 创建您的功能分支
 3. 提交更改
 4. 推送到分支
-5. 打开 Pull Request到dev分支
+5. 打开 Pull Request到 `release` 分支
 
 ## 细节注意
 为了保证社区可维护性，请尽量在代码中使用标准英语进行注释，避免出现其他语言（多语言文档除外）

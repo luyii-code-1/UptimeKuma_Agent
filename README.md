@@ -36,9 +36,9 @@ This focus on security and transparency is also one of the reasons the project i
 - [x] Bash command monitoring (keyword-based)
 - [ ] Systemd service monitoring
 - [x] HTTP request monitoring
-- [ ] Threaded polling loop
+- [x] Threaded polling loop
 - [ ] Comprehensive logging
-- [ ] Debug mode
+- [x] Debug mode
 - [ ] Cloud-based configuration
 - [ ] Hot updates / cloud control / cloud feedback / remote execution
 - [ ] Improved security checks
