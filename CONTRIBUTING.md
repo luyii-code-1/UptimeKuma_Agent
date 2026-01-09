@@ -46,14 +46,15 @@ Before submitting your changes, ensure that they pass the following automated ch
 - If CI passes, the code enters the Copilot review stage. Copilot evaluates overall quality, compliance, and best practices, after which I (the owner) perform a final review and merge when appropriate.
 
 ## How to Contribute
-1. Fork the repository’s `dev` branch  
+1. Fork the repository’s `release` branch  
 2. Create your feature branch  
 3. Commit your changes  
 4. Push the branch  
-5. Open a Pull Request targeting `dev`
+5. Open a Pull Request targeting `release`
 
 ## Additional Notes
 To maintain long-term community maintainability, please use standard English for code comments and avoid other languages (except in multilingual documentation).
+Currently, the program architecture is not very friendly to Pull Request merges. However, you can still raise questions or submit code via Issues or Pull Requests, and I will manually merge the code.
 
 ## Contact
 If you have any questions, please reach out via Issues or Discussions.
