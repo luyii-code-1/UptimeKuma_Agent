@@ -54,6 +54,7 @@ Before submitting your changes, ensure that they pass the following automated ch
 
 ## Additional Notes
 To maintain long-term community maintainability, please use standard English for code comments and avoid other languages (except in multilingual documentation).
+Currently, the program architecture is not very friendly to Pull Request merges. However, you can still raise questions or submit code via Issues or Pull Requests, and I will manually merge the code.
 
 ## Contact
 If you have any questions, please reach out via Issues or Discussions.

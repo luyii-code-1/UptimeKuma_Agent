@@ -348,7 +348,6 @@ def __main__():
 
 
     # Process Region
-    hosts_name = raw_region["hostname"]
     node_name = raw_region["node_name"]
     server = raw_region["server"]
     token = raw_region["token"]
@@ -356,7 +355,6 @@ def __main__():
     print(
         f"UptimeKuma_Agent\n",
         f"Node Name: {node_name}\n",
-        f"Hostname: {hosts_name}\n",
         f"Server: {server}\n",
         f"Token: {token}\n",
     )

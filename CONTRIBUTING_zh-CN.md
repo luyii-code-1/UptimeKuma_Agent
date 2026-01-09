@@ -42,6 +42,7 @@ UptimeKuma Agent 是一个用于 UptimeKuma Push监控类型的客户端，通�
 
 ## 细节注意
 为了保证社区可维护性，请尽量在代码中使用标准英语进行注释，避免出现其他语言（多语言文档除外）
+目前程序设计架构与Pull Request Merge的特性并不友好，但是你依然能够通过Issuse或Pull Request发出疑问或提交代码，我会手动去合并代码
 
 ## 联系我们
 如果您有任何问题，请通过 Issues 或 Discussions 与我们联系。
