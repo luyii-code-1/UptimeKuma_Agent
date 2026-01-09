@@ -1,6 +1,5 @@
 {
     "meta":{
-        "node_name": "Example",
         "enabled": true,
         "cloud_control": false,
         "cloud_control_url": "api_point"
