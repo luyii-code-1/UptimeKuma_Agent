@@ -55,6 +55,7 @@ Slim installation (to be developed): (pass `--config={json_detail}` to `main.py`
 Configuration file: `./conf.json`
 **All of the following configurations are required, none can be omitted!!!**
 Example:
+
     {
         "meta":{ ←---program settings
             "enabled": true, ←---whether to enable the node (if disabled, the program will exit immediately after startup)
