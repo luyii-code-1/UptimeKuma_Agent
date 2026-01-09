@@ -4,6 +4,8 @@
 
 This is a monitoring client for UptimeKuma, used to monitor shell commands, systemd services, or other services.
 
+[![Pylint](https://github.com/luyii-code-1/UptimeKuma_Agent/actions/workflows/pylint.yml/badge.svg?branch=main)](https://github.com/luyii-code-1/UptimeKuma_Agent/actions/workflows/pylint.yml)
+[![CodeQL](https://github.com/luyii-code-1/UptimeKuma_Agent/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main)](https://github.com/luyii-code-1/UptimeKuma_Agent/actions/workflows/github-code-scanning/codeql)
 ## About the Project
 
 ### What is this
