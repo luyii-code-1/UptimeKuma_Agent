@@ -3,6 +3,8 @@
 [English](README.md) | [简体中文](README_zh-CN.md)
 
 这是一个用于 UptimeKuma 的监控客户端，用于监控 shell 命令、systemd 服务或其他服务。
+[![CodeQL](https://github.com/luyii-code-1/UptimeKuma_Agent/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main)](https://github.com/luyii-code-1/UptimeKuma_Agent/actions/workflows/github-code-scanning/codeql)
+[![Pylint](https://github.com/luyii-code-1/UptimeKuma_Agent/actions/workflows/pylint.yml/badge.svg?branch=main)](https://github.com/luyii-code-1/UptimeKuma_Agent/actions/workflows/pylint.yml)
 
 ## 了解项目
 
