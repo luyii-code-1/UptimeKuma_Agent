@@ -7,7 +7,7 @@
     "region":{
         "hostname": "Example",
         "node_name": "Example",
-        "server": "http://192.168.1.2:3001/api/push/",
+        "server": "http://127.0.0.1:2001/api/push/",
         "token": ""
         },
     "monitors":{
@@ -16,7 +16,7 @@
             "enabled": true,
             "type": "bash",
             "command": "ping 8.8.8.8 -t 1",
-            "keyword": ["1 packets received"],
+            "keyword": ["1 packets received","1 received"],
             "warnword": [],
             "readline": 2,
             "ping": false,

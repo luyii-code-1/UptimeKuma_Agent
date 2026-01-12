@@ -5,6 +5,7 @@ import threading
 import argparse
 import requests
 import time
+from pathlib import Path
 
 
 """UptimeKuma Agent main module."""
@@ -14,6 +15,9 @@ import time
 # Developer:Luyii
 # mail:root@luyii.cn
 
+
+BASE_DIR = Path(__file__).resolve().parent
+CONF_PATH = BASE_DIR / "conf.json"
 
 COLOR_RESET = "\033[0m"
 COLOR_DEBUG = "\033[36m"    # Cyan
@@ -95,17 +99,23 @@ def everymonitor_thread(stop_event, everymonitor, server, token):
         request = server + api + "?status=" + req_sts +  "&msg=" + req_msg + "&ping=" + str(req_ping) + "&token=" + token
         if debug:
             debug_print("Request API URL: " + request)
-        try:
-            response = requests.get(request, timeout=30)
-            trn = response.text
-            sta = response.status_code
-            if debug:
-                debug_print(everymonitor["name"] + "UptimeKuma Server Response Status Code: " + str(response.status_code))
-                debug_print(everymonitor["name"] + "UptimeKuma Server Response Text: " + str(response.text))
-        except requests.RequestException as e:
-            error_print("UptimeKuma Server request error: " + str(e))
-            sta = None
-            trn = None
+        trn = ''
+        tmp_counter_1 = 0
+        while trn == '' and tmp_counter_1 <= 2:
+            if tmp_counter_1 > 0:
+                warn_print("Retrying UptimeKuma Server request for monitor " + everymonitor["name"] + " (Attempt " + str(tmp_counter_1 + 1) + ")")
+            try:
+                response = requests.get(request, timeout=30)
+                trn = response.text
+                sta = response.status_code
+                if debug:
+                    debug_print(everymonitor["name"] + "UptimeKuma Server Response Status Code: " + str(response.status_code))
+                    debug_print(everymonitor["name"] + "UptimeKuma Server Response Text: " + str(response.text))
+            except requests.RequestException as e:
+                error_print("UptimeKuma Server request error: " + str(e))
+                sta = None
+                trn = None
+            tmp_counter_1 += 1
 
         if sta == 200 and trn == '{"ok":true}':
             info_print(everymonitor["name"] + "UptimeKuma Server updated successfully for monitor " + everymonitor["name"])
@@ -133,6 +143,7 @@ def start_threads(everymonitor, server, token):
     
     if debug:
         debug_print("===== Now Running start_threads() =====")
+    
     if debug:
         debug_print("Config type: " + str(type(everymonitor)))  # Print Type
         debug_print("Config: " + str(everymonitor))             # Print Value
@@ -332,8 +343,13 @@ def __main__():
         debug_print("===== Now Running __main__() =====")
 
     # Load Raw Config
-    raw_conf = json.load(open("./conf.json", "r", encoding="utf-8"))
-
+    try:
+        with open(CONF_PATH, "r", encoding="utf-8") as f:
+            raw_conf = json.load(f)
+    except FileNotFoundError:
+        error_print("Config file not found")
+        sys.exit(1)
+    
     # Grop By Keys
     raw_meta = raw_conf["meta"]
     raw_region = raw_conf["region"]
