@@ -10,10 +10,6 @@ from pathlib import Path
 
 """UptimeKuma Agent main module."""
 
-# UptimeKuma Agent v0.0(Work in Progress)
-# This is a program that can use UptimeKuma to monitor shell or systemed etc. targe
-# Developer:Luyii
-# mail:root@luyii.cn
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -96,7 +92,7 @@ def everymonitor_thread(stop_event, everymonitor, server, token):
         api = everymonitor["api"]
         if debug:
             debug_print("API Key: " + api)
-        request = server + api + "?status=" + req_sts +  "&msg=" + req_msg + "&ping=" + str(req_ping) + "&token=" + token
+        request = server + api + "?status=" + req_sts +  "&msg=" + req_msg + "&ping=" + str(req_ping) + token
         if debug:
             debug_print("Request API URL: " + request)
         trn = ''
@@ -118,9 +114,9 @@ def everymonitor_thread(stop_event, everymonitor, server, token):
             tmp_counter_1 += 1
 
         if sta == 200 and trn == '{"ok":true}':
-            info_print(everymonitor["name"] + "UptimeKuma Server updated successfully for monitor " + everymonitor["name"])
+            info_print("UptimeKuma Server updated successfully for " + everymonitor["name"])
         else:
-            error_print(everymonitor["name"] + "UptimeKuma Server update failed for monitor " + everymonitor["name"])
+            error_print("UptimeKuma Server update failed for " + everymonitor["name"])
 
         now = time.time()
         wait_seconds = 60 - (now % 60)
@@ -165,6 +161,8 @@ def main_check_services(conf_monitor):
             status_is_up, message, ping = bash_check(conf_monitor)
         elif monitor_type == "http":
             status_is_up, message, ping = http_check(conf_monitor)
+        elif monitor_type == "systemed":
+            status_is_up, message, ping = systemed_check(conf_monitor)
         else:
             debug_print("WIP: Unsupported monitor type: " + monitor_type)
     else:
@@ -176,6 +174,107 @@ def main_check_services(conf_monitor):
 
     return status_is_up, message, ping
 
+def systemed_check(conf_monitor):
+    """Check Systemed Target"""
+    if debug:
+        debug_print("===== Now Running systemed_check() =====")
+
+    name = conf_monitor["name"]
+    services = conf_monitor["services"]
+    active = conf_monitor["active"]
+    keyword = conf_monitor["keyword"]
+    warnword = conf_monitor["warnword"]
+    datalevel = conf_monitor["datalevel"]
+    readline = conf_monitor["readline"]
+
+    if debug:
+        debug_print("Systemed Check - Name: " + name)
+        debug_print("Systemed Check - Services: " + str(services))
+        debug_print("Systemed Check - Active: " + str(active))
+        debug_print("Systemed Check - Keyword: " + str(keyword))
+        debug_print("Systemed Check - Warnword: " + str(warnword))  # [Work in Process](DISABLED)
+        debug_print("Systemed Check - Datalevel: " + str(datalevel))
+        debug_print("Systemed Check - Readline: " + str(readline))
+    
+    command_status = "systemctl is-active " + services
+    command_log = "journalctl -u " + services + " -n " + str(readline) + " --no-pager"
+
+    timmer = time.monotonic()
+    try:    # run systemed command
+        result = subprocess.run(
+            command_status,
+            shell=True,
+            capture_output=True,
+            check=True,
+            text=True,
+            timeout=30
+        )
+        tmp_is_return = True
+        tmp_return_status = str(result.stdout)
+    except subprocess.CalledProcessError as e:
+        tmp_is_return = False
+        tmp_return_status = ""
+        error_print("Systemed Check command status error: " + str(e))
+
+    try:
+        result = subprocess.run(
+            command_log,
+            shell=True,
+            capture_output=True,
+            check=True,
+            text=True,
+            timeout=30
+        )
+        tmp_is_return = tmp_is_return is True #ONLY double True out True
+        tmp_return_log = str(result.stdout)
+    except subprocess.CalledProcessError as e:
+        tmp_is_return = False
+        tmp_return_log = ""
+        error_print("Systemed Check command log error: " + str(e))
+    
+    
+    ping = time.monotonic() - timmer
+
+    tmp_return_status = tmp_return_status.strip()
+    tmp_process_output_list = tmp_return_log.split("\n")
+
+    if debug:
+        debug_print("Systemed Check - Status Output: " + str(tmp_return_status))
+        debug_print("Systemed Check - Log Raw Output: " + str(tmp_process_output_list))
+    status_is_up = False
+    if tmp_is_return:   # Request executed successfully
+        # Check status code
+        if check_in("active", tmp_return_status):
+            message = "Systemed Check - Status Normally:" + str(tmp_return_status)
+            if debug:
+                debug_print(message)
+            if check_in(keyword, tmp_return_log) or keyword == []:
+                status_is_up = True
+                message = "Systemed Check - Keyword Matched:" + str(keyword)
+                if debug:
+                    debug_print(message)
+            else:
+                status_is_up = False
+                message = "Systemed Check - Keyword Not Matched"
+                if debug:
+                    debug_print(message)
+            if check_in(warnword, tmp_return_log) and warnword != []:
+                status_is_up = False
+                message = "Systemed Check - Warnword Matched:" + str(warnword)
+                if debug:
+                    debug_print(message)
+        else:
+            message = "Systemed Check - Status Abnormal:" + str(tmp_return_status)
+            if debug:
+                warn_print(message)
+            status_is_up = False
+    else:
+        message = "Systemed Check - Run Failed"
+        if debug:
+            warn_print(message)
+        status_is_up = False
+
+    return status_is_up, message, ping
 
 def http_check(conf_monitor):
     """Check Http Target"""
@@ -221,6 +320,8 @@ def http_check(conf_monitor):
     if debug:
         debug_print("HTTP Check - Raw Output: " + str(tmp_process_output_list))
 
+    if readline >= len(tmp_process_output_list):
+        readline = len(tmp_process_output_list) - 1
     if tmp_is_return and readline != 0: #  Readline
         readline += 1 if tmp_process_output_list[-1] == "" else 0
         tmp_return = tmp_process_output_list[int(-readline)]
@@ -236,7 +337,7 @@ def http_check(conf_monitor):
             if debug:
                 debug_print(message)
             status_is_up = False
-            if  check_in(keyword, tmp_return):
+            if  check_in(keyword, tmp_return) or keyword == []:
                 status_is_up = True
                 message = "HTTP Check - Keyword Matched:" + str(keyword)
                 if debug:
@@ -306,6 +407,8 @@ def bash_check(conf_monitor):
 
     debug_print("Bash Check - Raw Output: " + str(tmp_process_output_list))
 
+    if readline >= len(tmp_process_output_list):
+        readline = len(tmp_process_output_list) - 1
     if tmp_is_return and readline != 0: #  Readline
         readline += 1 if tmp_process_output_list[-1] == "" else 0
         tmp_return = tmp_process_output_list[int(-readline)]
@@ -314,7 +417,7 @@ def bash_check(conf_monitor):
 
     status_is_up = False
     if tmp_is_return:   # Command executed successfully
-        if  check_in(keyword, tmp_return):
+        if  check_in(keyword, tmp_return) or keyword == []:
             status_is_up = True
             message = "Bash Check - Keyword Matched:" + str(keyword)
             if debug:
@@ -335,7 +438,6 @@ def bash_check(conf_monitor):
             warn_print(message)
         status_is_up = False    
     return status_is_up, message, ping
-
 
 def __main__():
     """Main"""
