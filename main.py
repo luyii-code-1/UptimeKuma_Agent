@@ -11,8 +11,13 @@ from pathlib import Path
 """UptimeKuma Agent main module."""
 
 
+def get_base_dir():
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent
+    else:
+        return Path(__file__).resolve().parent
 
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = get_base_dir()
 CONF_PATH = BASE_DIR / "conf.json"
 
 COLOR_RESET = "\033[0m"
@@ -445,13 +450,14 @@ def __main__():
         debug_print("===== Now Running __main__() =====")
 
     # Load Raw Config
+    
     try:
         with open(CONF_PATH, "r", encoding="utf-8") as f:
             raw_conf = json.load(f)
     except FileNotFoundError:
-        error_print("Config file not found")
+        error_print(f"Config file not found: {CONF_PATH}")
         sys.exit(1)
-    
+        
     # Grop By Keys
     raw_meta = raw_conf["meta"]
     raw_region = raw_conf["region"]
