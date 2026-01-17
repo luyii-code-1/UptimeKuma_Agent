@@ -32,10 +32,10 @@ This project runs on the client host and may require root privileges, so securit
 - [x] Debug mode
 - [x] Threaded loop
 - [x] Systemd service monitoring
+- [x] Slim installation mode
 - [ ] Comprehensive logging (long-term plan)
 - [ ] Enhanced security checks (long-term work)
 - [ ] Cloud-based configuration (long-term plan)
-- [ ] Slim installation mode
 - [ ] Hot updates / cloud control / cloud feedback / cloud execution (long-term plan)
 
 ## Installation
@@ -58,7 +58,7 @@ Currently, two modes are planned:
 **Warning**: This project **strongly depends** on a **correct configuration file**. If the configuration file is incorrect, the program may not work properly and may cause **serious consequences**.
 
 Configuration file: `./conf.json`  
-Use the [online configuration tool](/index.html)
+Use the [online configuration tool](https://luyii-code-1.github.io/UptimeKuma_Agent/)
 
 #### Decision Logic
 

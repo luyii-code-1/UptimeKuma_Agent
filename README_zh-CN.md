@@ -26,10 +26,10 @@ UptimeKuma Agent 是一个用于 UptimeKuma Push监控类型的客户端，通�
 - [x] Debug模式
 - [x] 线程循环
 - [x] Systemd 服务监控
+- [x] 瘦安装运行
 - [ ] 完善的日志记录（远期计划）
 - [ ] 完善的安全性检查（长期工作）
 - [ ] 云配置（远期计划）
-- [ ] 瘦安装运行
 - [ ] 热更新/云控制/云反馈/云执行（远期计划）
 
 
@@ -45,15 +45,15 @@ UptimeKuma Agent 是一个用于 UptimeKuma Push监控类型的客户端，通�
 ### 使用方法
 
 目前计划由两种：
-胖安装(默认)：（`main.py`+`config.json`）和系统服务（systemd）
-瘦安装(待开发)：（对`main.py`传入`--config={json_detail}`）
+胖安装：（`main.py`+`config.json`）和系统服务（systemd）
+瘦安装：（对`main.py`传入`--config '{.....}'`）
 
 ### 配置文件
 
 [警告]本项目**强依赖**于**正确的配置文件**，如果配置文件出现问题，程序可能不会正常工作，并可能**造成严重后果**
 
 配置文件`./conf.json`
-使用[在线配置工具](/index.html)
+使用[在线配置工具](https://luyii-code-1.github.io/UptimeKuma_Agent/)
 
 #### 判断逻辑
 
