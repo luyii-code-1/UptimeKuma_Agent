@@ -53,7 +53,7 @@ UptimeKuma Agent 是一个用于 UptimeKuma Push监控类型的客户端，通�
 [警告]本项目**强依赖**于**正确的配置文件**，如果配置文件出现问题，程序可能不会正常工作，并可能**造成严重后果**
 
 配置文件`./conf.json`
-使用[在线配置工具](/index.html)
+使用[在线配置工具](https://luyii-code-1.github.io/UptimeKuma_Agent/)
 
 #### 判断逻辑
 
