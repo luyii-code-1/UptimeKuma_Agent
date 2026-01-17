@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>UptimeKuma Agent Config Generator</title>
+
+<style>
+:root {
+  --bg: #0b1220;
+  --panel: #0f172a;
+  --card: #111c36;
+  --border: #1e2a4a;
+  --text: #e5edff;
+  --muted: #94a3b8;
+  --blue: #3b82f6;
+  --danger: #ef4444;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 1.2fr 80px 1fr;
+  height: 100vh;
+}
+
+/* layout */
+.left, .right {
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.right {
+  background: #020617;
+}
+
+.center {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px;
+}
+
+/* common */
+h1 {
+  font-size: 22px;
+  margin-bottom: 18px;
+}
+
+section {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 18px;
+}
+
+h2 {
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.field {
+  margin-bottom: 14px;
+}
+
+.field label {
+  font-size: 13px;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 6px;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+textarea {
+  resize: none;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--blue);
+}
+
+button {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  background: var(--blue);
+  color: white;
+}
+
+button.danger {
+  background: var(--danger);
+}
+
+/* toggle */
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+}
+
+.toggle input {
+  display: none;
+}
+
+.toggle span {
+  position: absolute;
+  inset: 0;
+  background: #334155;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: .2s;
+}
+
+.toggle span::after {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background: white;
+  border-radius: 50%;
+  top: 3px;
+  left: 3px;
+  transition: .2s;
+}
+
+.toggle input:checked + span {
+  background: var(--blue);
+}
+
+.toggle input:checked + span::after {
+  transform: translateX(20px);
+}
+
+/* monitor */
+.monitor {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.monitor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<!-- LEFT -->
+<div class="left">
+<h1>UptimeKuma Agent · Config</h1>
+
+<section>
+<h2>Meta</h2>
+
+<div class="field row">
+  <label>启用此客户端(Enable Agent)</label>
+  <label class="toggle">
+    <input type="checkbox" id="meta_enabled">
+    <span></span>
+  </label>
+</div>
+
+<div class="field row">
+  <label>云端控制(Cloud Control)</label>
+  <label class="toggle">
+    <input type="checkbox" id="meta_cloud" onchange="cloud_box.style.display=this.checked?'block':'none'">
+    <span></span>
+  </label>
+</div>
+
+<div id="cloud_box" style="display:none">
+  <div class="field">
+    <label>云控地址(Cloud Control URL)</label>
+    <input id="meta_cloud_url">
+  </div>
+  <div style="font-size:12px;color:var(--muted)">
+    当前 Agent 版本尚未实现云控，该字段仅用于未来兼容。
+  </div>
+</div>
+</section>
+
+<section>
+<h2>区域设置(Region)</h2>
+<div class="field"><label>设备名称(Hostname)</label><input id="region_hostname"></div>
+<div class="field"><label>节点名称(Node Name)</label><input id="region_node_name"></div>
+<div class="field"><label>UptimeKuma宿主服务地址(Server)</label><input id="region_server"></div>
+<div class="field"><label>自定义验证Token，将直接添加在请求Url末尾，用于WAF等验证</label><input id="region_token"></div>
+</section>
+
+<section>
+<div id="monitors"></div>
+<button onclick="addMonitor()">+ 添加监控 Add Monitor</button>
+</section>
+</div>
+
+<!-- CENTER -->
+<div class="center">
+<button onclick="formToJson()">→</button>
+<button onclick="jsonToForm()">←</button>
+</div>
+
+<!-- RIGHT -->
+<div class="right">
+<h2>conf.json</h2>
+<textarea id="jsonArea" style="height:100%" spellcheck="false"
+placeholder="在此粘贴或编辑 conf.json | Paste or edit conf.json"></textarea>
+</div>
+
+</div>
+
+<script>
+let monitorIndex = 1;
+
+function addMonitor() {
+  const m = document.createElement("div");
+  m.className = "monitor";
+  m.innerHTML = `
+    <div class="monitor-header">
+      <strong>Monitor ${monitorIndex++}</strong>
+      <button class="danger" onclick="this.closest('.monitor').remove()">Delete</button>
+    </div>
+
+    <div class="field"><label>Name</label><input class="name"></div>
+
+    <div class="field row">
+      <label>Enabled</label>
+      <label class="toggle">
+        <input type="checkbox" class="enabled">
+        <span></span>
+      </label>
+    </div>
+
+    <div class="field"><label>API</label><input class="api"></div>
+
+    <div class="field">
+      <label>Type</label>
+      <select class="type" onchange="renderType(this)">
+        <option value="bash">Bash命令(关键词)</option>
+        <option value="http">HTTP请求(关键词)</option>
+        <option value="systemed">Systemd服务(在线并命中关键词)</option>
+      </select>
+    </div>
+
+    <div class="type-box"></div>
+  `;
+  document.getElementById("monitors").appendChild(m);
+  renderType(m.querySelector(".type"));
+  return m;
+}
+
+function renderType(sel) {
+  const box = sel.closest(".monitor").querySelector(".type-box");
+  if (sel.value === "bash") {
+    box.innerHTML = `
+      <div class="field"><label>执行命令(Command)</label><input class="command"></div>
+      <div class="field"><label>在线关键词(Keyword) 留空默认通过，逗号分隔多个关键词</label><input class="keyword"></div>
+      <div class="field"><label>离线关键词(Warnword) 留空默认通过，逗号分隔多个关键词</label><input class="warnword"></div>
+      <div class="field"><label>返回内容读取行数(Readline) 自下而上，不包含末尾空行</label><input type="number" class="readline"></div>
+    `;
+  }
+  if (sel.value === "http") {
+    box.innerHTML = `
+      <div class="field"><label>检测地址(URL)</label><input class="url"></div>
+      <div class="field"><label>命中状态码(Status Code)</label><input class="statuscode"></div>
+      <div class="field"><label>命中关键词(Keyword) 留空默认通过，逗号分隔多个关键词</label><input class="keyword"></div>
+      <div class="field"><label>离线关键词(Warnword) 留空默认通过，逗号分隔多个关键词</label><input class="warnword"></div>
+      <div class="field"><label>返回内容读取行数(Readline) 自下而上，不包含末尾空行</label><input type="number" class="readline"></div>
+    `;
+  }
+  if (sel.value === "systemed") {
+    box.innerHTML = `
+      <div class="field"><label>服务名称(Service)</label><input class="services"></div>
+      <div class="field"><label>在线关键词(Keyword) 留空默认通过，逗号分隔多个关键词</label><input class="keyword"></div>
+      <div class="field"><label>离线关键词(Warnword) 留空默认通过，逗号分隔多个关键词</label><input class="warnword"></div>
+      <div class="field"><label>返回内容读取行数(Readline) 自下而上，不包含末尾空行</label><input type="number" class="readline"></div>
+    `;
+  }
+}
+
+function list(v) {
+  return v ? v.split(",").map(x => x.trim()) : [];
+}
+
+/* 表单 → JSON */
+function formToJson() {
+  const conf = {
+    meta: {
+      enabled: meta_enabled.checked,
+      cloud_control: meta_cloud.checked,
+      cloud_control_url: meta_cloud_url.value || ""
+    },
+    region: {
+      hostname: region_hostname.value || "",
+      node_name: region_node_name.value || "",
+      server: region_server.value || "",
+      token: region_token.value || ""
+    },
+    monitors: {}
+  };
+
+  document.querySelectorAll(".monitor").forEach((m, i) => {
+    const type = m.querySelector(".type").value;
+    const obj = {
+      name: m.querySelector(".name").value || "",
+      enabled: m.querySelector(".enabled").checked,
+      type,
+      api: m.querySelector(".api").value || "",
+      ping: false,
+      datalevel: 0,
+      command: "",
+      url: "",
+      services: "",
+      keyword: [],
+      warnword: [],
+      statuscode: [],
+      readline: 0
+    };
+
+    Object.keys(obj).forEach(k => {
+      const el = m.querySelector("." + k);
+      if (!el) return;
+      if (Array.isArray(obj[k])) obj[k] = list(el.value);
+      else if (typeof obj[k] === "number") obj[k] = Number(el.value) || 0;
+      else obj[k] = el.value || "";
+    });
+
+    conf.monitors[String(i + 1)] = obj;
+  });
+
+  jsonArea.value = JSON.stringify(conf, null, 2);
+}
+
+/* JSON → 表单 */
+function jsonToForm() {
+  let conf;
+  try {
+    conf = JSON.parse(jsonArea.value);
+  } catch {
+    alert("JSON 格式错误 | Invalid JSON format");
+    return;
+  }
+
+  meta_enabled.checked = !!conf.meta?.enabled;
+  meta_cloud.checked = !!conf.meta?.cloud_control;
+  meta_cloud_url.value = conf.meta?.cloud_control_url || "";
+  cloud_box.style.display = meta_cloud.checked ? "block" : "none";
+
+  region_hostname.value = conf.region?.hostname || "";
+  region_node_name.value = conf.region?.node_name || "";
+  region_server.value = conf.region?.server || "";
+  region_token.value = conf.region?.token || "";
+
+  const box = document.getElementById("monitors");
+  box.innerHTML = "";
+  monitorIndex = 1;
+
+  Object.values(conf.monitors || {}).forEach(m => {
+    const el = addMonitor();
+    el.querySelector(".name").value = m.name || "";
+    el.querySelector(".enabled").checked = !!m.enabled;
+    el.querySelector(".api").value = m.api || "";
+
+    const typeSel = el.querySelector(".type");
+    typeSel.value = m.type;
+    renderType(typeSel);
+
+    Object.keys(m).forEach(k => {
+      const field = el.querySelector("." + k);
+      if (!field) return;
+      field.value = Array.isArray(m[k]) ? m[k].join(",") : m[k];
+    });
+  });
+}
+</script>
+</body>
+</html>
