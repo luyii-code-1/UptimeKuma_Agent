@@ -13,7 +13,7 @@
     "monitors":{
         "1":{
             "name": "shell test(ping)",
-            "enabled": false,
+            "enabled": true,
             "type": "bash",
             "command": "ping 8.8.8.8 -t 1",
             "keyword": ["1 packets received","1 received"],
@@ -25,11 +25,11 @@
         },
         "2":{
             "name": "http test",
-            "enabled": false,
+            "enabled": true,
             "type": "http",
             "url": "https://www.baidu.com",
             "statuscode": [200,301,302],
-            "keyword": ["head"],
+            "keyword": [],
             "ping": false,
             "readline": 0,
             "warnword": [],
@@ -41,7 +41,7 @@
             "enabled": true,
             "type": "systemed",
             "services": "docker",
-            "active": ["active"],
+            "active": [],
             "keyword": [],
             "warnword": ["Failed","failed","error","timeout"],
             "ping": false,

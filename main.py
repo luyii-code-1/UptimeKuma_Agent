@@ -34,6 +34,12 @@ def parse_args():
         "--debug",
         action="store_true",
         help="Enable debug mode"
+    )  
+    parser.add_argument(
+        "--config",
+        type=str,
+        default=None,
+        help="Your custom config."
     )
     return parser.parse_args()
 def debug_print(msg):
@@ -253,16 +259,22 @@ def systemed_check(conf_monitor):
             message = "Systemed Check - Status Normally:" + str(tmp_return_status)
             if debug:
                 debug_print(message)
-            if check_in(keyword, tmp_return_log) or keyword == []:
+            if check_in(keyword, tmp_return_log):
                 status_is_up = True
                 message = "Systemed Check - Keyword Matched:" + str(keyword)
                 if debug:
                     debug_print(message)
             else:
-                status_is_up = False
-                message = "Systemed Check - Keyword Not Matched"
-                if debug:
-                    debug_print(message)
+                if keyword == []:
+                    status_is_up = True
+                    message = "Systemed Check - No Keyword Set"
+                    if debug:
+                        debug_print(message)
+                else:
+                    status_is_up = False
+                    message = "Systemed Check - Keyword Not Matched"
+                    if debug:
+                        debug_print(message)
             if check_in(warnword, tmp_return_log) and warnword != []:
                 status_is_up = False
                 message = "Systemed Check - Warnword Matched:" + str(warnword)
@@ -342,16 +354,22 @@ def http_check(conf_monitor):
             if debug:
                 debug_print(message)
             status_is_up = False
-            if  check_in(keyword, tmp_return) or keyword == []:
+            if  check_in(keyword, tmp_return):
                 status_is_up = True
                 message = "HTTP Check - Keyword Matched:" + str(keyword)
                 if debug:
                     debug_print(message)
             else:
-                status_is_up = False
-                message = "HTTP Check - Keyword Not Matched"
-                if debug:
-                    debug_print(message)
+                if keyword == []:
+                    status_is_up = True
+                    message = "HTTP Check - No Keyword Set"
+                    if debug:
+                        debug_print(message)
+                else:
+                    status_is_up = False
+                    message = "HTTP Check - Keyword Not Matched"
+                    if debug:
+                        debug_print(message)
             if check_in(warnword, tmp_return) and warnword != []:
                 status_is_up = False
                 message = "HTTP Check - Warnword Matched:" + str(warnword)
@@ -422,16 +440,22 @@ def bash_check(conf_monitor):
 
     status_is_up = False
     if tmp_is_return:   # Command executed successfully
-        if  check_in(keyword, tmp_return) or keyword == []:
+        if  check_in(keyword, tmp_return):
             status_is_up = True
             message = "Bash Check - Keyword Matched:" + str(keyword)
             if debug:
                 debug_print(message)
         else:
-            status_is_up = False
-            message = "Bash Check - Keyword Not Matched"
-            if debug:
-                debug_print(message)
+            if keyword == []:
+                status_is_up = True
+                message = "Bash Check - No Keyword Set"
+                if debug:
+                    debug_print(message)
+            else:
+                status_is_up = False
+                message = "Bash Check - Keyword Not Matched"
+                if debug:
+                    debug_print(message)
         if check_in(warnword, tmp_return) and warnword != []:
             status_is_up = False
             message = "Bash Check - Warnword Matched:" + str(warnword)
@@ -446,35 +470,48 @@ def bash_check(conf_monitor):
 
 def __main__():
     """Main"""
+
     if debug:
+        print(f"{COLOR_DEBUG}[DEBUG] Debug mode enabled{COLOR_RESET}")
         debug_print("===== Now Running __main__() =====")
 
     # Load Raw Config
-    
+    if args.config is not None:
+        raw_conf = json.loads(args.config)
+    else:
+        try:
+            with open(CONF_PATH, "r", encoding="utf-8") as f:
+                raw_conf = json.load(f)
+        except FileNotFoundError:
+            error_print(f"Config file not found: {CONF_PATH}")
+            sys.exit(1)
+
     try:
-        with open(CONF_PATH, "r", encoding="utf-8") as f:
-            raw_conf = json.load(f)
-    except FileNotFoundError:
-        error_print(f"Config file not found: {CONF_PATH}")
+        # Grop By Keys
+        raw_meta = raw_conf["meta"]
+        raw_region = raw_conf["region"]
+        raw_monitors = raw_conf["monitors"]
+
+        enabled = raw_meta["enabled"]
+    except KeyError as e:
+        error_print(f"Bad Config File {e}")
         sys.exit(1)
-        
-    # Grop By Keys
-    raw_meta = raw_conf["meta"]
-    raw_region = raw_conf["region"]
-    raw_monitors = raw_conf["monitors"]
 
     # Process Meta
-    enabled = raw_meta["enabled"]
     if not enabled:
         sys.exit(0)
     #cloud_control = raw_meta["cloud_control"]
     #cloud_control_url = raw_meta["cloud_control_url"]
 
+    try:
+        # Process Region
+        node_name = raw_region["node_name"]
+        server = raw_region["server"]
+        token = raw_region["token"]
+    except KeyError as e:
+        error_print(f"Bad Config File {e}")
+        sys.exit(1)
 
-    # Process Region
-    node_name = raw_region["node_name"]
-    server = raw_region["server"]
-    token = raw_region["token"]
 
     print(
         f"UptimeKuma_Agent\n",
@@ -482,6 +519,9 @@ def __main__():
         f"Server: {server}\n",
         f"Token: {token}\n",
     )
+
+    if server[len(server)-1] != '/':
+        server = server + '/'
 
     # Process Monitors
     monitor_threads = []
@@ -504,9 +544,9 @@ def __main__():
 args = parse_args()
 debug = args.debug
 
-if debug:
-    print(f"{COLOR_DEBUG}[DEBUG] Debug mode enabled{COLOR_RESET}")
-
-
 if __name__ == "__main__":
-    __main__()
+    try:
+        __main__()
+    except Exception as e:
+        error_print(f"Fatal error: {e}")
+        sys.exit(1)

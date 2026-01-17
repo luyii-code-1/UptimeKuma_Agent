@@ -215,7 +215,7 @@ button.danger {
 <h2>区域设置(Region)</h2>
 <div class="field"><label>设备名称(Hostname)</label><input id="region_hostname"></div>
 <div class="field"><label>节点名称(Node Name)</label><input id="region_node_name"></div>
-<div class="field"><label>UptimeKuma宿主服务地址(Server)</label><input id="region_server"></div>
+<div class="field"><label>UptimeKuma宿主服务地址(Server) 格式: https://example.com:3000/api/push/</label><input id="region_server"></div>
 <div class="field"><label>自定义验证Token，将直接添加在请求Url末尾，用于WAF等验证</label><input id="region_token"></div>
 </section>
 
@@ -351,10 +351,33 @@ function formToJson() {
     Object.keys(obj).forEach(k => {
       const el = m.querySelector("." + k);
       if (!el) return;
-      if (Array.isArray(obj[k])) obj[k] = list(el.value);
-      else if (typeof obj[k] === "number") obj[k] = Number(el.value) || 0;
-      else obj[k] = el.value || "";
+
+      // 1. boolean：只读 checked
+      if (typeof obj[k] === "boolean") {
+        obj[k] = el.checked;
+        return;
+      }
+
+      // 2. number
+      if (typeof obj[k] === "number") {
+        obj[k] = Number(el.value) || 0;
+        return;
+      }
+
+      // 3. array
+      if (Array.isArray(obj[k])) {
+        if (k === "statuscode") {
+          obj[k] = list(el.value).map(v => Number(v)).filter(v => !isNaN(v));
+        } else {
+          obj[k] = list(el.value);
+        }
+        return;
+      }
+
+      // 4. string
+      obj[k] = el.value || "";
     });
+
 
     conf.monitors[String(i + 1)] = obj;
   });
