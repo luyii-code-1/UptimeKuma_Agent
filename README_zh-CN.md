@@ -25,7 +25,7 @@ UptimeKuma Agent 是一个用于 UptimeKuma Push监控类型的客户端，通�
 - [x] Http 请求监控
 - [x] Debug模式
 - [x] 线程循环
-- [ ] Systemd 服务监控（即将完成）
+- [x] Systemd 服务监控
 - [ ] 完善的日志记录（远期计划）
 - [ ] 完善的安全性检查（长期工作）
 - [ ] 云配置（远期计划）
@@ -53,47 +53,8 @@ UptimeKuma Agent 是一个用于 UptimeKuma Push监控类型的客户端，通�
 [警告]本项目**强依赖**于**正确的配置文件**，如果配置文件出现问题，程序可能不会正常工作，并可能**造成严重后果**
 
 配置文件`./conf.json`
-**以下所有配置缺一不可！！！**
-示例：
-    {
-        "meta":{ ←---程序设置
-            "enabled": true, ←---是否启用节点（如果不启用程序将在启动后马上退出）
-            "cloud_control": false,←---是否启用云端控制（未开发）
-            "cloud_control_url": "api_point"←---云端控制地址
-            },
-        "region":{←---节点信息
-            "node_name": "Example",←---节点名称
-            "server": "http://127.0.0.1:3001/api/push/" , ←---**UptimeKuma Push API端点**，**`/api/push`后带上`/`**:`/api/push/`
-            "token": ""←---用于访问API端点的验证密钥（基于你自己配置的端点服务自行配置，默认为空不影响使用）
-            },
-        "monitors":{←---所有监控的配置
-            "1":{←---单项名称（自定义，**不可重复**）
-                "name": "shell test(ping)",←---显示名称
-                "enabled": true,←---是否启用检查，不启用将提交Down状态
-                "type": "bash",←---**类型，目前支持“http”，“bash”两种**
-                "command": "ping 8.8.8.8 -t 1",←---**执行的命令**
-                "keyword": ["1 packets received"],←---**需要命中在线关键词tpye=list**
-                "warnword": [],←---**需要命中的离线关键词tpye=list**
-                "readline": 0,←---输出内容从下到上用于关键词检查的行数，0为使用全部（自动删除末尾空行）
-                "ping": false,←---返回Ping数据（默认开启暂不支持修改）
-                "datalevel": 0,←---返回的日志等级（未开发）
-                "api": "CsUGkIxISU"←---**重要**监控项API，见API密钥
-            },
-            "2":{
-                "name": "http test",
-                "enabled": true,
-                "type": "http",
-                "url": "https://www.baidu.com",
-                "statuscode": [200,301,302],←---**用于判断在线状态的状态码**
-                "keyword": ["head"],
-                "ping": false,
-                "readline": 0,
-                "warnword": [],
-                "datalevel": 0,
-                "api": "kcwjnVGRwx"
-            }
-        }
-    }
+使用[在线配置工具](/index.html)
+
 #### 判断逻辑
 
 Bash:返回内容 -→ 以`\n`切割每行 -→ `readline`筛选 -→ keyword命中? --*是*-→ warnword命中 --*否*-→ 状态在线       否则状态不在线
@@ -111,8 +72,11 @@ UptimeKuma - 添加监控项
 对于不同平台，Bash Check命令通常不通，比如使用`ping`检查主机活跃态：
 
 对于`Windows(Terminal)`      推荐的语句为`ping 127.0.0.1 -n 1` *向回环发送1个ICMP包*
+
 对于`Linux(Ubuntu)`          推荐的语句为`ping 127.0.0.1 -c 1` *向回环发送1个ICMP包*
+
 对于`MacOS(OS X 26 Tahoe)`   推荐的语句为`ping 127.0.0.1 -t 1` *向回环发送1个ICMP包*
+
 
 程序不会检查不同平台的命令差异，因此请在迁移平台时**务必**修改"command"块，**否则**监控可能会应为30s超时未结束而出现错误
 
