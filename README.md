@@ -58,7 +58,7 @@ Currently, two modes are planned:
 **Warning**: This project **strongly depends** on a **correct configuration file**. If the configuration file is incorrect, the program may not work properly and may cause **serious consequences**.
 
 Configuration file: `./conf.json`  
-Use the [online configuration tool](/index.html)
+Use the [online configuration tool](https://luyii-code-1.github.io/UptimeKuma_Agent/)
 
 #### Decision Logic
 
