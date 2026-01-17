@@ -335,6 +335,7 @@ function formToJson() {
     const obj = {
       name: m.querySelector(".name").value || "",
       enabled: m.querySelector(".enabled").checked,
+      active: true,
       type,
       api: m.querySelector(".api").value || "",
       ping: false,
